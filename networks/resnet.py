@@ -23,7 +23,7 @@ from tensorflow.keras import layers, backend
 def block1(x, filters, kernel_size=3, stride=1,
            conv_shortcut=True, name=None):
     """A residual block."""
-    
+
     bn_axis = 3  # image data format: channels_last
 
     if conv_shortcut is True:
@@ -56,7 +56,7 @@ def block1(x, filters, kernel_size=3, stride=1,
 
 def stack1(x, filters, blocks, stride1=2, name=None):
     """A set of stacked residual blocks."""
-    
+
     x = block1(x, filters, stride=stride1, name=name + '_block1')
     for i in range(2, blocks + 1):
         x = block1(x, filters, conv_shortcut=False, name=name + '_block' + str(i))
@@ -66,7 +66,7 @@ def stack1(x, filters, blocks, stride1=2, name=None):
 def block2(x, filters, kernel_size=3, stride=1,
            conv_shortcut=False, name=None):
     """A residual block.(version 2)"""
-    
+
     bn_axis = 3  # image data format: channels_last
 
     preact = layers.BatchNormalization(axis=bn_axis, epsilon=1.001e-5,
@@ -99,7 +99,7 @@ def block2(x, filters, kernel_size=3, stride=1,
 
 def stack2(x, filters, blocks, stride1=2, name=None):
     """A set of stacked residual blocks.(version 2)"""
-    
+
     x = block2(x, filters, conv_shortcut=True, name=name + '_block1')
     for i in range(2, blocks):
         x = block2(x, filters, name=name + '_block' + str(i))
@@ -155,10 +155,10 @@ def ResNet58V2_for_crnn(inputs, scope="resnet"):
         # x = stack2(x, 256, 28, name='conv4')
         # x = stack2(x, 512, 6, stride1=1, name='conv5')
         return x
-    
+
     with backend.name_scope(scope):
         outputs = ResNet(inputs, stack_fn, use_bias=True, block_preact=True)  # 1/8 size
-    
+
     return outputs
 
 
@@ -168,21 +168,21 @@ def ResNet58V2_for_ctpn(inputs, scope="resnet"):
         x = stack2(x, 128, 8, name='conv3')  # 1/8 size
         x = stack2(x, 256, 8, name='conv4')  # 1/16 size
         return x
-    
+
     with backend.name_scope(scope):
         outputs = ResNet(inputs, stack_fn, use_bias=True, block_preact=True)  # 1/16 size
-    
+
     return outputs
 
 
 def ResNet76V2_for_yolo(inputs, scope="resnet"):
     def stack_fn(x):
         x = stack2(x, 64, 3, name='conv2')
-        x1 = stack2(x, 128, 8, name='conv3')   # 1/8 size
+        x1 = stack2(x, 128, 8, name='conv3')  # 1/8 size
         x2 = stack2(x1, 256, 8, name='conv4')  # 1/16 size
         x3 = stack2(x2, 512, 6, name='conv5')  # 1/32 size
         return [x1, x2, x3]
-    
+
     with backend.name_scope(scope):
         x_list = ResNet(inputs, stack_fn, use_bias=True, block_preact=None)
 
@@ -190,10 +190,10 @@ def ResNet76V2_for_yolo(inputs, scope="resnet"):
         features_list = []
         for i, x in enumerate(x_list):
             x = layers.BatchNormalization(axis=bn_axis, epsilon=1.001e-5,
-                                          name='post_bn_%d'%i)(x)
-            feat = layers.Activation('relu', name='post_relu_%d'%i)(x)
+                                          name='post_bn_%d' % i)(x)
+            feat = layers.Activation('relu', name='post_relu_%d' % i)(x)
             features_list.append(feat)
-    
+
     return features_list
 
 
@@ -202,12 +202,12 @@ def ResNet64V2_segment_book_page(inputs, feat_stride=16, scope="resnet"):
         x = stack2(x, 64, 3, name='conv2')
         x = stack2(x, 128, 8, name='conv3')  # 1/8 size
         x = stack2(x, 256, 8, name='conv4')  # 1/16 size
-        x = stack2(x, 512, 2, stride1=feat_stride//16, name='conv5')  # 1/16 or 1/32
+        x = stack2(x, 512, 2, stride1=feat_stride // 16, name='conv5')  # 1/16 or 1/32
         return x
-    
+
     with backend.name_scope(scope):
         outputs = ResNet(inputs, stack_fn, use_bias=True, block_preact=True)
-    
+
     return outputs
 
 
@@ -216,12 +216,12 @@ def ResNet40V2_segment_text_line(inputs, feat_stride=16, scope="resnet"):
         x = stack2(x, 64, 3, name='conv2')
         x = stack2(x, 128, 4, name='conv3')  # 1/8 size
         x = stack2(x, 256, 4, name='conv4')  # 1/16 size
-        x = stack2(x, 512, 2, stride1=feat_stride//16, name='conv5')  # 1/16 or 1/32
+        x = stack2(x, 512, 2, stride1=feat_stride // 16, name='conv5')  # 1/16 or 1/32
         return x
-    
+
     with backend.name_scope(scope):
         outputs = ResNet(inputs, stack_fn, use_bias=True, block_preact=True)
-    
+
     return outputs
 
 
@@ -230,12 +230,12 @@ def ResNet40V2_segment_mix_line(inputs, feat_stride=16, scope="resnet"):
         x = stack2(x, 64, 3, name='conv2')
         x = stack2(x, 128, 4, name='conv3')  # 1/8 size
         x = stack2(x, 256, 4, name='conv4')  # 1/16 size
-        x = stack2(x, 512, 2, stride1=feat_stride//16, name='conv5')  # 1/16 or 1/32
+        x = stack2(x, 512, 2, stride1=feat_stride // 16, name='conv5')  # 1/16 or 1/32
         return x
-    
+
     with backend.name_scope(scope):
         outputs = ResNet(inputs, stack_fn, use_bias=True, block_preact=True)
-    
+
     return outputs
 
 
@@ -244,23 +244,23 @@ def ResNet40V2_segment_double_line(inputs, feat_stride=16, scope="resnet"):
         x = stack2(x, 64, 3, name='conv2')
         x = stack2(x, 128, 4, name='conv3')  # 1/8 size
         x = stack2(x, 256, 4, name='conv4')  # 1/16 size
-        x = stack2(x, 512, 2, stride1=feat_stride//16, name='conv5')  # 1/16 or 1/32
+        x = stack2(x, 512, 2, stride1=feat_stride // 16, name='conv5')  # 1/16 or 1/32
         return x
-    
+
     with backend.name_scope(scope):
         outputs = ResNet(inputs, stack_fn, use_bias=True, block_preact=True)
-    
+
     return outputs
 
 
 def ResNet58V2_for_char_recog(inputs, feat_stride=16, scope="resnet"):
     def stack_fn(x):
         x = stack2(x, 64, 3, name='conv2')
-        x = stack2(x, 128, 8, name='conv3')                         # 1/8 size
-        x = stack2(x, 256, 8, stride1=feat_stride//8, name='conv4') # 1/8 or 1/16
+        x = stack2(x, 128, 8, name='conv3')  # 1/8 size
+        x = stack2(x, 256, 8, stride1=feat_stride // 8, name='conv4')  # 1/8 or 1/16
         return x
-    
+
     with backend.name_scope(scope):
         outputs = ResNet(inputs, stack_fn, use_bias=True, block_preact=True)  # 1/16 size
-    
+
     return outputs

@@ -3,10 +3,10 @@
 
 import os
 import shutil
-
+import pandas as pd
 from chinese_components.char2compo import chinese_components_info
 
-from config import CHINESE_LABEL_FILE, TRADITION_CHARS_FILE
+from config import CHINESE_LABEL_FILE_S, CHINESE_LABEL_FILE_ML, TRADITION_CHARS_FILE
 from config import IGNORABLE_CHARS_FILE, IMPORTANT_CHARS_FILE
 
 
@@ -22,25 +22,33 @@ def remove_then_makedirs(dir_name):
 
 
 # json字典的key只能是字符串，python字典的key可以是 str, int, float, tuple
-def chinese_labels_dict():
-    assert os.path.exists(CHINESE_LABEL_FILE), "Label file does not exist!"
-    
-    id2char_dict = {}
-    char2id_dict = {}
-    with open(CHINESE_LABEL_FILE, "r", encoding="utf-8") as fr:
-        for line in fr:
-            label_id, char = line.strip().split()[:2]
-            label_id = int(label_id)
-            if label_id not in id2char_dict and char not in char2id_dict:
-                id2char_dict[label_id] = char
-                char2id_dict[char] = label_id
-            elif label_id in id2char_dict:
-                raise ValueError("The label must be unique, but multiple label %d."%label_id)
-            else:
-                raise ValueError("The character must be unique, but multiple character %s."%char)
-    
-    num_chars = len(char2id_dict)
-    
+def chinese_labels_dict(charset_size='m'):
+    assert os.path.exists(CHINESE_LABEL_FILE_S), "Charset file does not exist!"
+    assert os.path.exists(CHINESE_LABEL_FILE_ML), "Charset file does not exits!"
+
+    if charset_size == 's':
+        with open(CHINESE_LABEL_FILE_S, "r", encoding="utf-8") as fr:
+            lines = fr.readlines()
+        lines = [line.strip() for line in lines]
+        id2char_dict = {i: k for i, k in enumerate(lines)}
+        char2id_dict = {k: i for i, k in enumerate(lines)}
+        num_chars = len(char2id_dict)
+    elif charset_size == 'm':
+        charset_csv = pd.read_csv(CHINESE_LABEL_FILE_ML)
+        charset = charset_csv[['char']][charset_csv['acc_rate'] <= 0.999].values.squeeze(axis=-1).tolist()
+        id2char_dict = {i: k for i, k in enumerate(charset)}
+        char2id_dict = {k: i for i, k in enumerate(charset)}
+        num_chars = len(char2id_dict)
+    elif charset_size == 'l':
+        charset_csv = pd.read_csv(CHINESE_LABEL_FILE_ML)
+        charset = charset_csv[['char']][charset_csv['acc_rate'] <= 0.9999].values.squeeze(axis=-1).tolist()
+        charset = charset_csv[['char']][charset_csv['acc_rate'] <= 0.999].values.squeeze(axis=-1).tolist()
+        id2char_dict = {i: k for i, k in enumerate(charset)}
+        char2id_dict = {k: i for i, k in enumerate(charset)}
+        num_chars = len(char2id_dict)
+    else:
+        raise ValueError('charset_size should be s, m or l.')
+
     return id2char_dict, char2id_dict, num_chars
 
 
@@ -81,7 +89,6 @@ TRADITION_CHARS = traditional_chars()
 
 # Chinese components recognition task
 CHAR_TO_COMPO_SEQ, COMPO_SEQ_TO_CHAR, NUM_CHAR_STRUC, NUM_SIMPLE_CHAR, NUM_LR_COMPO = chinese_components_info()
-
 
 if __name__ == '__main__':
     # print(ignorable_chars())

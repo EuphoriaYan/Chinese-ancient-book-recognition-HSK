@@ -6,6 +6,7 @@ from segment_base.train import main as train
 from config import SEGMENT_MIX_LINE_TAGS_FILE_H, SEGMENT_MIX_LINE_TAGS_FILE_V
 from config import SEGMENT_MIX_LINE_TFRECORDS_H, SEGMENT_MIX_LINE_TFRECORDS_V
 
+
 def main():
     train(data_file=SEGMENT_MIX_LINE_TFRECORDS_V,
           src_type="tfrecords",

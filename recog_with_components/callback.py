@@ -11,7 +11,7 @@ from config import CHAR_RECOG_CKPT_DIR, CHAR_RECOG_LOGS_DIR
 
 def tf_config():
     tf.config.set_soft_device_placement(True)
-    
+
     gpus = tf.config.experimental.list_physical_devices('GPU')
     try:
         tf.config.experimental.set_memory_growth(gpus[0], True)
@@ -27,15 +27,14 @@ def get_callbacks(model_struc="densenet_gru"):
         verbose=1,
         save_best_only=True,
         save_weights_only=True)
-    
+
     lr_reducer = ReduceLROnPlateau(monitor='loss',
                                    factor=0.5,
                                    patience=10,  # num of epochs
                                    cooldown=0,
                                    min_lr=0)
-    
+
     check_or_makedirs(CHAR_RECOG_LOGS_DIR)
     logs = TensorBoard(log_dir=CHAR_RECOG_LOGS_DIR)
-    
-    return [checkpoint, lr_reducer, logs]
 
+    return [checkpoint, lr_reducer, logs]

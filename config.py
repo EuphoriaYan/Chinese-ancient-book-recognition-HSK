@@ -3,11 +3,11 @@
 
 import os
 
-
 # ************************ basic configuration ***************************
 # os.getcwd() returns the current working directory
-CURR_DIR = os.path.dirname(__file__)    # .replace("/", os.sep)
-CHINESE_LABEL_FILE = os.path.join(CURR_DIR, "chinese_labels", "chinese_labels_all.txt")
+CURR_DIR = os.path.dirname(__file__)  # .replace("/", os.sep)
+CHINESE_LABEL_FILE_S = os.path.join(CURR_DIR, "chinese_labels", "charset_s.txt")
+CHINESE_LABEL_FILE_ML = os.path.join(CURR_DIR, "chinese_labels", "all_abooks.unigrams_desc.Clean.rate.csv")
 TRADITION_CHARS_FILE = os.path.join(CURR_DIR, "chinese_labels", "chars_Big5_all_traditional_13053.txt")
 IGNORABLE_CHARS_FILE = os.path.join(CURR_DIR, "chinese_labels", "ignorable_chars.txt")
 IMPORTANT_CHARS_FILE = os.path.join(CURR_DIR, "chinese_labels", "important_chars.txt")
@@ -69,7 +69,7 @@ TEXT_LINE_SIZE = CHAR_IMG_SIZE
 VALIDATION_SPLIT = 0.1
 
 # book page detection
-BOX_CLASSES_ON_BOOK = ["text",]
+BOX_CLASSES_ON_BOOK = ["text", ]
 BATCH_SIZE_BOOK_PAGE = 1
 BOOK_PAGE_FIXED_SIZE = (640, 640)
 BOOK_PAGE_MAX_GT_BOXES = 1500
@@ -222,7 +222,6 @@ SEGMENT_LOGS_DIR = {
     "text_line": SEGMENT_TEXT_LINE_LOGS_DIR
 }
 
-
 SEGMENT_TASK_ID = {
     "book_page": 0,
     "mix_line": 1,
@@ -247,7 +246,7 @@ SEGMENT_BATCH_SIZE = {
 SEGMENT_FIXED_HEIGHT = {
     "book_page": 1024,
     "mix_line": 96,
-    "double_line": 400, # 等宽缩放
+    "double_line": 400,  # 等宽缩放
     "text_line": 64
 }
 
@@ -276,7 +275,7 @@ SEGMENT_DISTANCE_THRESH = {
     "book_page": 28,
     "mix_line": 20,
     "double_line": 16,
-    "text_line": 0.6    # distance threshold ratio
+    "text_line": 0.6  # distance threshold ratio
 }
 
 SEGMENT_NMS_MAX_OUTPUTS = {

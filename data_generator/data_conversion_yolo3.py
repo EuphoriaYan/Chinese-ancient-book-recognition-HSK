@@ -18,7 +18,7 @@ def convert_annotation(src_list, dest_file):
                     img_path = os.path.join(root_dir, img_name)
                     boxes = json.loads(boxes_str)
                     cls_id = 0
-                    boxes_str = " ".join(["%d,%d,%d,%d,%d"%(x1, y1, x2, y2, cls_id) for x1, y1, x2, y2 in boxes])
+                    boxes_str = " ".join(["%d,%d,%d,%d,%d" % (x1, y1, x2, y2, cls_id) for x1, y1, x2, y2 in boxes])
                     fw.write(img_path + "\t" + boxes_str + "\n")
 
 
@@ -26,5 +26,5 @@ if __name__ == '__main__':
     convert_annotation(src_list=[(BOOK_PAGE_TAGS_FILE_H, BOOK_PAGE_IMGS_H),
                                  (BOOK_PAGE_TAGS_FILE_V, BOOK_PAGE_IMGS_V)],
                        dest_file=YOLO3_BOOK_PAGE_TAGS_FILE)
-    
+
     print("Done !")

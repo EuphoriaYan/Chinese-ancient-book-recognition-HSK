@@ -17,11 +17,11 @@ from config import CHAR_IMAGE_PATHS_FILE, CHAR_TFRECORDS_PATHS_FILE
 def train(data_file, src_type, epochs, init_epochs=0, model_struc="densenet_gru", weights_path=""):
     tf_config()
     K.set_learning_phase(True)
-    
+
     # 加载模型
     train_model = work_net(stage="train", img_size=CHAR_IMG_SIZE, model_struc=model_struc)
     compile(train_model, loss_names=["char_struc_loss", "sc_char_loss", "lr_compo_loss"])
-    
+
     # 增加度量汇总
     metrics_summary = train_model.get_layer('summary_fn').output
     add_metrics(train_model,
@@ -31,19 +31,20 @@ def train(data_file, src_type, epochs, init_epochs=0, model_struc="densenet_gru"
                                   "total_acc", "total_top3", "total_top5"],
                 metric_val_list=metrics_summary)
     train_model.summary()
-    
+
     # for layer in train_model.layers:
     #     print(layer.name, " trainable: ", layer.trainable)
-    
+
     # load model
-    load_path = os.path.join(CHAR_RECOG_CKPT_DIR, "char_recog_with_compo_" + model_struc + "_{:04d}.h5".format(init_epochs))
+    load_path = os.path.join(CHAR_RECOG_CKPT_DIR,
+                             "char_recog_with_compo_" + model_struc + "_{:04d}.h5".format(init_epochs))
     weights_path = weights_path if os.path.exists(weights_path) else load_path
     if os.path.exists(weights_path):
         train_model.load_weights(weights_path, by_name=True)
         print("\nLoad model weights from %s\n" % weights_path)
-    
+
     training_generator, validation_generator = data_generator(data_file=data_file, src_type=src_type)
-    
+
     # 开始训练
     train_model.fit_generator(generator=training_generator,
                               steps_per_epoch=500,
@@ -54,15 +55,15 @@ def train(data_file, src_type, epochs, init_epochs=0, model_struc="densenet_gru"
                               validation_steps=20,
                               callbacks=get_callbacks(model_struc),
                               max_queue_size=100)
-    
+
     # 保存模型
     train_model.save_weights(os.path.join(CHAR_RECOG_CKPT_DIR, "char_recog_with_compo_" + model_struc + "_finished.h5"))
-    
+
 
 def main():
     train(data_file=CHAR_TFRECORDS_PATHS_FILE,
           src_type="tfrecords",
-          epochs=50*10,
+          epochs=50 * 10,
           init_epochs=121,
           model_struc="densenet_gru",
           weights_path="")

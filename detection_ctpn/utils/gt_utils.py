@@ -89,7 +89,7 @@ def gen_gt_from_quadrilaterals(gt_quadrilaterals, class_ids, image_shape, width_
         gt_class_ids: [n]
     """
     h, w = list(image_shape)[:2]
-    x_array = np.arange(0, w+1, width_stride, np.float32)  # 固定宽度间隔的x坐标点
+    x_array = np.arange(0, w + 1, width_stride, np.float32)  # 固定宽度间隔的x坐标点
     # 每个四边形x 最小值和最大值
     x_min_np = np.min(gt_quadrilaterals[:, ::2], axis=1)
     x_max_np = np.max(gt_quadrilaterals[:, ::2], axis=1)
@@ -119,11 +119,11 @@ def gen_gt_from_boxes_tf(raw_boxes, class_ids, im_shape, width_stride=16, box_mi
     h, w = im_shape[0], im_shape[1]
     x_array = tf.range(0, w + 1, delta=width_stride, dtype=tf.float32)  # 固定宽度间隔的x坐标点
 
-    x1, y1, x2, y2 = raw_boxes[:,0], raw_boxes[:,1], raw_boxes[:,2], raw_boxes[:,3]
-    
-    _x1, _x2 = tf.expand_dims(x1, axis=-1), tf.expand_dims(x2, axis=-1) # (m, 1)
-    _x_array = tf.expand_dims(x_array, axis=0)                          # (1, n)
-    
+    x1, y1, x2, y2 = raw_boxes[:, 0], raw_boxes[:, 1], raw_boxes[:, 2], raw_boxes[:, 3]
+
+    _x1, _x2 = tf.expand_dims(x1, axis=-1), tf.expand_dims(x2, axis=-1)  # (m, 1)
+    _x_array = tf.expand_dims(x_array, axis=0)  # (1, n)
+
     indices = tf.where(tf.logical_and(_x_array > _x1, _x_array < _x2))
     xs = tf.gather(x_array, indices[:, 1])
     x1 = tf.gather(x1, indices[:, 0])
@@ -135,20 +135,20 @@ def gen_gt_from_boxes_tf(raw_boxes, class_ids, im_shape, width_stride=16, box_mi
     new_x1 = tf.where(xs - x1 > width_stride, xs - width_stride, x1)
     new_x2 = xs
     gt_boxes = tf.stack([new_x1, y1, new_x2, y2], axis=1)
-    
-    indices_for_right = tf.where(x2-xs<=16)
+
+    indices_for_right = tf.where(x2 - xs <= 16)
     r_x1 = tf.gather(xs, indices_for_right[:, 0])
     r_x2 = tf.gather(x2, indices_for_right[:, 0])
     r_y1 = tf.gather(y1, indices_for_right[:, 0])
     r_y2 = tf.gather(y2, indices_for_right[:, 0])
     r_cls_ids = tf.gather(cls_ids, indices_for_right[:, 0])
     r_boxes = tf.stack([r_x1, r_y1, r_x2, r_y2], axis=1)
-    
+
     gt_boxes = tf.concat([gt_boxes, r_boxes], axis=0)
     cls_ids = tf.concat([cls_ids, r_cls_ids], axis=0)
-    
+
     gt_indices = tf.where(gt_boxes[:, 2] - gt_boxes[:, 0] > box_min_size)
     gt_boxes = tf.gather(gt_boxes, gt_indices[:, 0])
     cls_ids = tf.gather(cls_ids, gt_indices[:, 0])
-    
+
     return gt_boxes, cls_ids

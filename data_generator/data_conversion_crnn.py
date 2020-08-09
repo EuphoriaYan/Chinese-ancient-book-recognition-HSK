@@ -28,5 +28,5 @@ if __name__ == '__main__':
                        dest_file=CRNN_TEXT_LINE_TAGS_FILE_H)
     convert_annotation(src_list=[(TEXT_LINE_TAGS_FILE_V, TEXT_LINE_IMGS_V)],
                        dest_file=CRNN_TEXT_LINE_TAGS_FILE_V)
-    
+
     print("Done !")

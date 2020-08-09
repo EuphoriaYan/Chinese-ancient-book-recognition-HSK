@@ -18,7 +18,7 @@ from util import COMPO_SEQ_TO_CHAR
 
 def model_weights_path(weights, model_struc="densenet_gru"):
     ckpt_dir = CHAR_RECOG_CKPT_DIR
-    
+
     if isinstance(weights, str):
         if os.path.exists(weights):
             weights_path = weights
@@ -37,12 +37,11 @@ def model_weights_path(weights, model_struc="densenet_gru"):
         weights_id = "{:04d}".format(weights)
         weights_path = os.path.join(ckpt_dir, "char_recog_with_compo_" + model_struc + "_" + weights_id + ".h5")
         assert os.path.exists(weights_path)
-    
+
     return weights_path
 
 
 def char_predict(images=None, img_paths=None, recog_model=None, model_struc="densenet_gru", weights="", to_print=False):
-    
     # images
     if images is not None:
         np_img_list = convert_images(images)
@@ -61,7 +60,7 @@ def char_predict(images=None, img_paths=None, recog_model=None, model_struc="den
         recog_model.load_weights(weights_path, by_name=True)
         print("\nLoad model weights from %s\n" % weights_path)
         # pred_model.summary()
-    
+
     # predict
     batch_size = CHAR_RECOG_BATCH_SIZE
     pred_topk_chars_list = []
@@ -72,7 +71,7 @@ def char_predict(images=None, img_paths=None, recog_model=None, model_struc="den
             np_img = np.array(PIL_img, dtype=np.uint8)
             _images_list.append(np_img)
         batch_images = np.array(_images_list, dtype=np.float32)
-        
+
         pred_char_struc, pred_results = recog_model.predict(x=batch_images)  # 模型预测
 
         topk = min(5, np.shape(pred_results)[1])
@@ -90,14 +89,14 @@ def char_predict(images=None, img_paths=None, recog_model=None, model_struc="den
                     compo_info = "⿰" + ",".join(compo_str_seq)
                 pred_chars_topk += COMPO_SEQ_TO_CHAR.get(compo_info, "")
             pred_topk_chars_list.append(pred_chars_topk)
-    
+
     if to_print:
         for i, img_name in enumerate(img_name_list):
             chinese_char = img_name[0]
             print("Target {} - {} Prediction.".format(chinese_char, pred_topk_chars_list[i]))
-    
+
     return np_img_list, img_name_list, pred_topk_chars_list
-        
+
 
 def main():
     char_predict(images=None,
@@ -107,7 +106,6 @@ def main():
                  weights=121,
                  to_print=True)
 
+
 if __name__ == '__main__':
-    
-    
     print("Done !")

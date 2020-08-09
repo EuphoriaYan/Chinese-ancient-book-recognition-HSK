@@ -10,11 +10,10 @@ from detection_ctpn.predict import main as predict, TRAIN_FINISHED_WEIGHTS
 
 from config import CTPN_BOOK_PAGE_TAGS_FILE, CTPN_ROOT_DIR
 
-
 if __name__ == '__main__':
     # train
     # train(data_file=CTPN_BOOK_PAGE_TAGS_FILE, src_type="tfrecords", text_type="vertical", epochs=500, init_epochs=9)
-    
+
     # predict
     parse = argparse.ArgumentParser()
     parse.add_argument("--image_path", type=str, default="", help="image path")
@@ -26,5 +25,5 @@ if __name__ == '__main__':
 
     dest_dir = os.path.join(CTPN_ROOT_DIR, "samples")
     predict(img_path=args.image_path, dest_dir=dest_dir, text_type="vertical", weights_path=TRAIN_FINISHED_WEIGHTS)
-    
+
     print("Done !")

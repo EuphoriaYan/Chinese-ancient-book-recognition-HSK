@@ -18,9 +18,9 @@ def compute_iou(gt_boxes, anchors):
     Return:
         IoU:[M, N]
     """
-    gt_boxes = tf.expand_dims(gt_boxes, axis=1) # [M,1,4]
-    anchors = tf.expand_dims(anchors, axis=0)   # [1,N,4]
-    
+    gt_boxes = tf.expand_dims(gt_boxes, axis=1)  # [M,1,4]
+    anchors = tf.expand_dims(anchors, axis=0)  # [1,N,4]
+
     # 交集
     intersect_w = tf.maximum(0.0,
                              tf.minimum(gt_boxes[:, :, 2], anchors[:, :, 2]) -
@@ -33,12 +33,12 @@ def compute_iou(gt_boxes, anchors):
     # 计算面积
     area_gt = (gt_boxes[:, :, 2] - gt_boxes[:, :, 0]) * (gt_boxes[:, :, 3] - gt_boxes[:, :, 1])
     area_anchor = (anchors[:, :, 2] - anchors[:, :, 0]) * (anchors[:, :, 3] - anchors[:, :, 1])
-    
+
     # 计算并集
     union = area_gt + area_anchor - intersect
     # 交并比
     iou = tf.divide(intersect, union, name='regress_target_iou')
-    
+
     return iou
 
 
@@ -63,7 +63,7 @@ def ctpn_regress_target(anchors, gt_boxes):
     # 计算回归目标
     dy = (gt_center_y - center_y) / h
     dh = tf.math.log(gt_h / h)
-    
+
     dx = side_regress_target(anchors, gt_boxes)  # 侧边改善
     regress_target = tf.stack([dy, dh, dx], axis=1)
     regress_target /= tf.constant([0.1, 0.2, 0.1])
@@ -82,14 +82,14 @@ def side_regress_target(anchors, gt_boxes):
     w = anchors[:, 2] - anchors[:, 0]  # 实际是固定长度16
     center_x = (anchors[:, 0] + anchors[:, 2]) * 0.5
     gt_center_x = (gt_boxes[:, 0] + gt_boxes[:, 2]) * 0.5
-    
+
     # 解释：整张图片被均匀地划分为width=16的网格
     # 生成的anchor与这些网格在宽度方向完全一致，原gt划分的子gt与这些网格在宽度方向也完全一致
     # 非边缘的anchor和子gt中心偏移必然为0
     # 边缘anchor的width=16，子gt的width<16,两者有一个侧边是重合的，另一侧边的距离是中心距离的2倍
     # 因此，在边缘处对齐anchor和子gt，需要移动两倍的中心点偏移；不是侧边的anchor，偏移为0，不需移动
     dx = (gt_center_x - center_x) * 2 / w
-    
+
     return dx
 
 
@@ -102,11 +102,11 @@ def ctpn_target(gt_boxes, valid_anchors, valid_indices, train_anchors_num=256, p
     """
     # 获取真正的GT,去除标签位
     gt_boxes = tf_utils.remove_pad(gt_boxes)
-    gt_boxes, gt_cls = gt_boxes[:,:4], gt_boxes[:,4]
-    gt_cls = tf.cast(gt_cls, dtype=tf.int32) # fg:1
-    
+    gt_boxes, gt_cls = gt_boxes[:, :4], gt_boxes[:, 4]
+    gt_cls = tf.cast(gt_cls, dtype=tf.int32)  # fg:1
+
     gt_num = tf.shape(gt_boxes)[0]
-    
+
     # 计算iou值
     iou = compute_iou(gt_boxes, valid_anchors)
 
@@ -114,40 +114,40 @@ def ctpn_target(gt_boxes, valid_anchors, valid_indices, train_anchors_num=256, p
     anchors_iou_max = tf.reduce_max(iou, axis=0, keepdims=True)
     anchors_iou_max = tf.where(tf.greater_equal(anchors_iou_max, CTPN_POS_ANCHOR_IOU), anchors_iou_max, -1)
     anchors_iou_max_bool = tf.equal(iou, anchors_iou_max)
-    
+
     anchors_no_goal = tf.where(tf.less(anchors_iou_max, CTPN_POS_ANCHOR_IOU), True, False)
-    
+
     # 与gt_box iou最大的anchor是正样本(可能有多个)
     gt_iou_max = tf.reduce_max(iou, axis=1, keepdims=True)
     gt_iou_max_bool = tf.equal(iou, gt_iou_max)
-    
+
     gt_iou_max_bool = tf.logical_and(gt_iou_max_bool, anchors_no_goal)
-    
+
     # 合并两部分正样本索引
     positive_bool_matrix = tf.logical_or(anchors_iou_max_bool, gt_iou_max_bool)
-    
+
     # 获取iou值用于度量
     gt_match_min_iou = tf.reduce_min(tf.boolean_mask(iou, positive_bool_matrix))
     gt_match_mean_iou = tf.reduce_mean(tf.boolean_mask(iou, positive_bool_matrix))
-    
+
     # 正样本索引
     positive_indices = tf.where(positive_bool_matrix)  # [positive_num, (gt索引号, anchor索引号)]
-    
+
     # 采样正样本
     positive_num = tf.minimum(tf.shape(positive_indices)[0], int(train_anchors_num * positive_ratio))
     positive_indices = tf.random.shuffle(positive_indices)[:positive_num]
-    
+
     # 获取正样本anchor和对应的gt_box
     positive_gt_indices = positive_indices[:, 0]
     positive_anchor_indices = positive_indices[:, 1]
-    
+
     positive_anchors = tf.gather(valid_anchors, positive_anchor_indices)
     positive_gt_boxes = tf.gather(gt_boxes, positive_gt_indices)
     positive_gt_cls = tf.gather(gt_cls, positive_gt_indices)
-    
+
     # 计算回归目标
     deltas = ctpn_regress_target(positive_anchors, positive_gt_boxes)
-    
+
     # 获取负样本 iou < 0.5
     negative_bool = tf.less(tf.reduce_max(iou, axis=0), CTPN_NEG_ANCHOR_IOU)
     positive_bool = tf.reduce_any(positive_bool_matrix, axis=0)
@@ -164,14 +164,15 @@ def ctpn_target(gt_boxes, valid_anchors, valid_indices, train_anchors_num=256, p
     # 合并正负样本
     deltas = tf.concat([deltas, negative_deltas], axis=0, name='ctpn_target_deltas')
     class_ids = tf.concat([positive_gt_cls, negative_gt_cls], axis=0, name='ctpn_target_class_ids')
-    anchor_indices_sampled = tf.concat([positive_anchor_indices, negative_indices], axis=0, name='ctpn_train_anchor_indices')
+    anchor_indices_sampled = tf.concat([positive_anchor_indices, negative_indices], axis=0,
+                                       name='ctpn_train_anchor_indices')
     anchor_indices_sampled = tf.gather(valid_indices, anchor_indices_sampled)  # 对应到全局索引
-    
+
     # padding
     deltas = tf_utils.pad_to_fixed_size(deltas, train_anchors_num)
     class_ids = tf_utils.pad_to_fixed_size(tf.expand_dims(class_ids, 1), train_anchors_num)
     anchor_indices_sampled = tf_utils.pad_to_fixed_size(tf.expand_dims(anchor_indices_sampled, 1), train_anchors_num)
-    
+
     # 用作度量的必须是浮点类型
     return [deltas, class_ids, anchor_indices_sampled,
             tf.cast(gt_num, dtype=tf.float32),
@@ -195,16 +196,16 @@ class CtpnTarget(layers.Layer):
         """
         gt_boxes, valid_anchors, valid_indices = inputs
 
-        options = {"valid_anchors":valid_anchors,
-                   "valid_indices":valid_indices,
+        options = {"valid_anchors": valid_anchors,
+                   "valid_indices": valid_indices,
                    "train_anchors_num": self.train_anchors_num,
                    "positive_ratio": self.positive_ratio}
         outputs = tf.map_fn(fn=lambda i_gt_boxes: ctpn_target(i_gt_boxes, **options),
                             elems=gt_boxes,
-                            dtype=[tf.float32, tf.int32, tf.int64] + [tf.float32]*5,
+                            dtype=[tf.float32, tf.int32, tf.int64] + [tf.float32] * 5,
                             name="loop_ctpn_target")
         return outputs
-    
+
     def compute_output_shape(self, input_shape):
         return [(input_shape[0], self.train_anchors_num, 4),  # deltas (dy, dh, dx, padding_flag)
                 (input_shape[0], self.train_anchors_num, 2),  # cls (class_id, padding_flag)

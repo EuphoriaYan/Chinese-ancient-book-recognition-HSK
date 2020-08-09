@@ -20,7 +20,7 @@ from skimage import io, transform, color, util
 def adjust_image_contrast(np_page):
     # 求foreground和background的分割阈值, 全局阈值
     thresh = threshold_otsu(np_page)
-    
+
     if book_page_too_dark(np_page, thresh=thresh):
         x1, y1, x2, y2 = find_dark_page_box(np_page, thresh=thresh)
         np_page = np_page[y1:y2 + 1, x1:x2 + 1]
@@ -307,16 +307,16 @@ def find_minimum_value_in_range(values_seq, start=None, end=None, reverse=False)
         minimum_index = len(obj_seq) - 1 - np.argmin(reverse_seq) + start
 
     return minimum, minimum_index
-    
+
 
 def book_page_pre_processing(np_page_list):
     np_pages = []
     for np_page in np_page_list:
-        np_page = color.rgb2gray(np_page)   # float32 [0, 1.]
+        np_page = color.rgb2gray(np_page)  # float32 [0, 1.]
         np_page = util.img_as_ubyte(np_page)
         np_page = adjust_image_contrast(np_page=np_page)
         # np_page = crop_page_margin(np_page=np_page)
-        np_page = color.gray2rgb(np_page)   # uint8
+        np_page = color.gray2rgb(np_page)  # uint8
         np_pages.append(np_page)
     return np_pages
 
@@ -324,7 +324,7 @@ def book_page_pre_processing(np_page_list):
 if __name__ == '__main__':
     PIL_img = Image.open("D:/feidegenggao/Desktop/test/版刻图像_史记1.jpg")
     np_img = np.array(PIL_img, dtype=np.uint8)
-    np_img = book_page_pre_processing([np_img,])[0]
+    np_img = book_page_pre_processing([np_img, ])[0]
     PIL_img = Image.fromarray(np_img)
     print(PIL_img.mode)
     PIL_img.show()

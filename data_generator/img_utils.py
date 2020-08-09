@@ -14,7 +14,7 @@ from config import CHAR_IMG_SIZE, MAX_ROTATE_ANGLE
 
 # 先生成比目标size稍大的图片，图片处理(旋转裁剪)之后，再缩放至目标大小
 # 如果直接生成目标大小的图片，生成的字会更小，裁剪之后还需要再次放大
-def generate_bigger_image_by_font(chinese_char, font_file, image_size=int(CHAR_IMG_SIZE*1.2)):
+def generate_bigger_image_by_font(chinese_char, font_file, image_size=int(CHAR_IMG_SIZE * 1.2)):
     height = width = image_size
 
     # 生成灰度图像，黑底白字，黑色像素值为0，白色像素值为255
@@ -55,21 +55,21 @@ def add_noise(np_img):
         pos_h = np.random.randint(0, np_img.shape[0])
         pos_w = np.random.randint(0, np_img.shape[1])
         point_size = random.randint(2, 3)
-        np_img[pos_h:pos_h+point_size, pos_w:pos_w+point_size] = \
-            255 - np_img[pos_h:pos_h+point_size, pos_w:pos_w+point_size]
+        np_img[pos_h:pos_h + point_size, pos_w:pos_w + point_size] = \
+            255 - np_img[pos_h:pos_h + point_size, pos_w:pos_w + point_size]
     return np_img
 
 
 # 图片增强, 高斯噪声
 def gauss_noise(np_img):
     np_img = np_img.astype(np.float32)  # 此步是为了避免像素点小于0，大于255的情况
-    
+
     noise = np.random.normal(0, 60, size=np_img.shape)
     np_img = np_img + noise
     np_img[np_img < 0] = 0
     np_img[np_img > 255] = 255
     np_img = np_img.astype(np.uint8)
-    
+
     return np_img
 
 
@@ -77,17 +77,17 @@ def gauss_noise(np_img):
 def salt_and_pepper_noise(np_img, proportion=0.05):
     h, w = np_img.shape[:2]
     num = int(h * w * proportion) // 2  # 添加椒盐噪声的个数
-    
+
     # 椒噪声
     hs = np.random.randint(0, h - 1, size=[num], dtype=np.int64)
     ws = np.random.randint(0, w - 1, size=[num], dtype=np.int64)
     np_img[hs, ws] = 0
-    
+
     # 盐噪声
     hs = np.random.randint(0, h - 1, size=[num], dtype=np.int64)
     ws = np.random.randint(0, w - 1, size=[num], dtype=np.int64)
     np_img[hs, ws] = 255
-    
+
     return np_img
 
 
@@ -95,8 +95,8 @@ def salt_and_pepper_noise(np_img, proportion=0.05):
 def random_crop(PIL_img):
     raw_w, raw_h = PIL_img.size
     crop_w, crop_h = np.random.uniform(0.8, 1.0, size=[2])
-    left, upper = np.random.uniform(0.0, 1-crop_w), np.random.uniform(0.0, 1-crop_h)
-    right, lower = left+crop_w, upper+crop_h
+    left, upper = np.random.uniform(0.0, 1 - crop_w), np.random.uniform(0.0, 1 - crop_h)
+    right, lower = left + crop_w, upper + crop_h
     crop_box = np.array([left, upper, right, lower]) * np.array([raw_w, raw_h, raw_w, raw_h])
     crop_box = crop_box.astype(np.int32)
     PIL_img = PIL_img.crop(crop_box)
@@ -111,7 +111,7 @@ def add_local_dim(np_img):
     radius = random.randint(12, 16)
     for i in range(-radius, radius):
         for j in range(-radius, radius):
-            if i**2 + j**2 <= radius**2 and 0 <= pos_h+i < np_img.shape[0] and 0 <= pos_w+j < np_img.shape[1]:
+            if i ** 2 + j ** 2 <= radius ** 2 and 0 <= pos_h + i < np_img.shape[0] and 0 <= pos_w + j < np_img.shape[1]:
                 np_img[pos_h + i, pos_w + j] = 0
     return np_img
 
@@ -190,7 +190,7 @@ def resize_image_keep_ratio(np_img, background_size=CHAR_IMG_SIZE):
     height_ratio = obj_height / cur_height
     scale_ratio = min(width_ratio, height_ratio)
 
-    new_size = ( math.floor(cur_width*scale_ratio), math.floor(cur_height*scale_ratio))
+    new_size = (math.floor(cur_width * scale_ratio), math.floor(cur_height * scale_ratio))
     new_size = (max(new_size[0], 1), max(new_size[1], 1))
 
     # cv.resize(src, dsize, dst=None, fx=None, fy=None, interpolation=None)
@@ -198,11 +198,11 @@ def resize_image_keep_ratio(np_img, background_size=CHAR_IMG_SIZE):
     # interpolation为插值方法，共有5种：INTER_NEAREST 最近邻插值法，INTER_LINEAR 双线性插值法(默认)，
     # INTER_AREA 基于局部像素的重采样，INTER_CUBIC 基于4x4像素邻域的3次插值法，INTER_LANCZOS4 基于8x8像素邻域的Lanczos插值
     # 如果是缩小图片，效果最好的是INTER_AREA；如果是放大图片，效果最好的是INTER_CUBIC(slow)或INTER_LINEAR(faster but still looks OK)
-    if scale_ratio==1:
+    if scale_ratio == 1:
         return np_img
-    elif scale_ratio<1:
+    elif scale_ratio < 1:
         interpolation = cv2.INTER_AREA
-    elif scale_ratio>1:
+    elif scale_ratio > 1:
         interpolation = cv2.INTER_CUBIC
     resized_np_img = cv2.resize(np_img, dsize=new_size, interpolation=interpolation)
 
@@ -268,7 +268,6 @@ def reverse_image_color(np_img=None, PIL_img=None):
 
 # 将生成的稍大的图片缩放至目标大小，图片颜色反转
 def get_standard_image(PIL_img, obj_size=CHAR_IMG_SIZE, reverse_color=False):
-
     # 转化为numpy.ndarray格式的图片
     np_img = np.array(PIL_img, dtype='uint8')
 
@@ -291,11 +290,11 @@ def get_standard_image(PIL_img, obj_size=CHAR_IMG_SIZE, reverse_color=False):
 
 # 图片旋转，将生成的稍大的图片缩放至目标大小
 # 对汉字图片进行增强及图片颜色反转
-def get_augmented_image(PIL_img, obj_size=CHAR_IMG_SIZE, rotation=True, noise=True, dilate=True, erode=True, reverse_color=False):
-
+def get_augmented_image(PIL_img, obj_size=CHAR_IMG_SIZE, rotation=True, noise=True, dilate=True, erode=True,
+                        reverse_color=False):
     # 图像旋转一个角度
     if rotation:
-        rotate_angle = random.choice(range(-MAX_ROTATE_ANGLE, MAX_ROTATE_ANGLE+1))
+        rotate_angle = random.choice(range(-MAX_ROTATE_ANGLE, MAX_ROTATE_ANGLE + 1))
         PIL_img = rotate_PIL_image(PIL_img, rotate_angle)
 
     # 转化为numpy.ndarray格式的图片
@@ -348,20 +347,20 @@ def load_external_image_bigger(img_path, white_background=True, reverse_color=Tr
     bigger_np_img = put_img_in_center(small_np_img=np_img, large_np_img=background_np_img)
 
     # 判断是否需要再次反转颜色，异或运算
-    if white_background^reverse_color:
+    if white_background ^ reverse_color:
         bigger_np_img = reverse_image_color(np_img=bigger_np_img)
 
     bigger_PIL_img = Image.fromarray(bigger_np_img)
     # print(bigger_PIL_img.size)
     # print(bigger_PIL_img.mode)
-    
+
     return bigger_PIL_img
 
 
 if __name__ == "__main__":
-
     # PIL_img = generate_bigger_image_by_font(chinese_char="龥", font_file="../chinese_fonts/mingliu.ttc")
-    PIL_img = load_external_image_bigger("E:/pycharm_project/ziku_images/張即之/動.gif", white_background=True, reverse_color=True)
+    PIL_img = load_external_image_bigger("E:/pycharm_project/ziku_images/張即之/動.gif", white_background=True,
+                                         reverse_color=True)
     # PIL_img = rotate_PIL_image(PIL_img, rotate_angle=30)
     # PIL_img = get_standard_image(PIL_img, obj_size=max(PIL_img.height, PIL_img.width), reverse_color=True)
     # PIL_img = random_crop(PIL_img)
@@ -373,13 +372,14 @@ if __name__ == "__main__":
     # 高斯噪声和椒盐噪声
     # np_img = gauss_noise(np_img)
     # np_img = salt_and_pepper_noise(np_img)
-    
+
     # 图片去噪
     # np_img[np_img < 10] = 0
     # np_img[np_img > 240] = 255
     # PIL_img = Image.fromarray(np_img)
-    
-    PIL_img = get_augmented_image(PIL_img, obj_size=max(PIL_img.height, PIL_img.width), rotation=False, noise=False, dilate=False,erode=False, reverse_color=True)
+
+    PIL_img = get_augmented_image(PIL_img, obj_size=max(PIL_img.height, PIL_img.width), rotation=False, noise=False,
+                                  dilate=False, erode=False, reverse_color=True)
     PIL_img.show()
 
     print("Done !")

@@ -7,14 +7,13 @@ import json
 
 from config import CHINESE_COMPO_ROOT_DIR
 
-
-CHINESE_STROKES_RAW_FILE    = os.path.join(CHINESE_COMPO_ROOT_DIR, "UCS_strokes.txt")
-CHINESE_STROKES_FILE        = os.path.join(CHINESE_COMPO_ROOT_DIR, "chinese_strokes_num.txt")
-CHINESE_SPLIT_RAW_FILE      = os.path.join(CHINESE_COMPO_ROOT_DIR, "UCS_IDS.txt")
-CHINESE_SPLIT_CORRECT_FILE  = os.path.join(CHINESE_COMPO_ROOT_DIR, "UCS_IDS_to_correct.txt")
-CHINESE_SPLIT_FILE          = os.path.join(CHINESE_COMPO_ROOT_DIR, "chinese_split_basic.txt")
-CHINESE_STRUCTURES          = {'⿱', '⿰', '⿳', '⿲', '⿸', '⿹', '⿺', '⿶', '⿵', '⿷', '⿴', '⿻'}
-UNICODE_HEAD, UNICODE_TAIL  = 0x4e00, 0x9fa5
+CHINESE_STROKES_RAW_FILE = os.path.join(CHINESE_COMPO_ROOT_DIR, "UCS_strokes.txt")
+CHINESE_STROKES_FILE = os.path.join(CHINESE_COMPO_ROOT_DIR, "chinese_strokes_num.txt")
+CHINESE_SPLIT_RAW_FILE = os.path.join(CHINESE_COMPO_ROOT_DIR, "UCS_IDS.txt")
+CHINESE_SPLIT_CORRECT_FILE = os.path.join(CHINESE_COMPO_ROOT_DIR, "UCS_IDS_to_correct.txt")
+CHINESE_SPLIT_FILE = os.path.join(CHINESE_COMPO_ROOT_DIR, "chinese_split_basic.txt")
+CHINESE_STRUCTURES = {'⿱', '⿰', '⿳', '⿲', '⿸', '⿹', '⿺', '⿶', '⿵', '⿷', '⿴', '⿻'}
+UNICODE_HEAD, UNICODE_TAIL = 0x4e00, 0x9fa5
 
 
 def process_chinese_strokes():
@@ -31,7 +30,7 @@ def process_chinese_strokes():
                         strokes_dict[strokes_num] = char
                     else:
                         strokes_dict[strokes_num] += char
-    
+
     with open(CHINESE_STROKES_FILE, "w", encoding="utf8") as fw:
         for strokes_num, chinese_chars in strokes_dict.items():
             fw.write(str(strokes_num) + "\t" + chinese_chars + "\n")
@@ -41,8 +40,8 @@ def parse_split_seq(split_seq):
     assert split_seq[0] in CHINESE_STRUCTURES
     curr_struc = split_seq[0]
     compo_num = 3 if curr_struc in "⿳⿲" else 2
-    
-    result_seq = [curr_struc,]
+
+    result_seq = [curr_struc, ]
     curr_pos = 1
     for _ in range(compo_num):
         curr_e = split_seq[curr_pos]
@@ -54,7 +53,7 @@ def parse_split_seq(split_seq):
             single_compo = curr_e
             result_seq.append(single_compo)
             curr_pos += 1
-    
+
     return result_seq, curr_pos
 
 
@@ -89,7 +88,7 @@ def get_sub_compo_by_struc(c, split_dict=None, base_struc=None):
             return [c]
         elif len(split_dict[c]) == 1:
             return split_dict[c]
-        
+
         split_seq = split_dict[c]
         if base_struc is None:
             if split_seq[0] == "⿻":
@@ -106,7 +105,7 @@ def get_sub_compo_by_struc(c, split_dict=None, base_struc=None):
         # composite component
         assert isinstance(c, list)
         split_seq = c
-    
+
     curr_struc = split_seq[0]
     if curr_struc in "⿰⿲⿺":
         curr_struc = "⿰"
@@ -114,7 +113,7 @@ def get_sub_compo_by_struc(c, split_dict=None, base_struc=None):
         curr_struc = "⿱"
     else:
         curr_struc = "other"
-    
+
     if curr_struc != base_struc:
         if isinstance(c, str):
             return [c]
@@ -166,7 +165,7 @@ def extract_split_info():
                 if "," in strokes_num:
                     strokes_num = strokes_num.split(",")[0]
                 strokes_dict[char] = int(strokes_num)
-    
+
     # extract char split_info
     split_dict = {}
     pattern1 = re.compile(r"^.*(?=\[.*?\]$)")
@@ -180,7 +179,7 @@ def extract_split_info():
                     split_info = m.group(0)
                 split_seq = re.findall(pattern2, split_info)
                 split_dict[char] = split_seq
-    
+
     # list all char and compo by their first sub-compo
     temp_dict = {}
     temp_set = set()
@@ -210,8 +209,8 @@ def extract_split_info():
     for c in all_compo:
         chars = list(temp_dict[c])
         chars.sort(key=lambda c: (len(c), c))
-        print(c+":", "".join(chars))
-    
+        print(c + ":", "".join(chars))
+
     # # correct char split_info
     # with open(CHINESE_SPLIT_CORRECT_FILE, "r", encoding="utf8") as fr:
     #     for line in fr:
@@ -281,18 +280,18 @@ def extract_split_info():
     #
     #         assert split_json is not None
     #         fw.write(label + "\t" + u_code + "\t" + chinese_char + "\t" + strokes_num + "\t" + split_json + "\n")
-        
-        # print(len(simple_chars), to_sort(simple_chars, strokes_dict))
-        # print(len(nested_chars), to_sort(nested_chars, strokes_dict))
-        # print(len(enclosed_chars), to_sort(enclosed_chars, strokes_dict))
-        # print(len(upper_lower_chars), to_sort(upper_lower_chars, strokes_dict))
-        # print(len(lr_compo_set), to_sort(lr_compo_set, strokes_dict))
-        # for c in to_sort(lr_compo_set, strokes_dict):
-        #     print(c, ":", to_sort(lr_compo_dict[c], strokes_dict))
+
+    # print(len(simple_chars), to_sort(simple_chars, strokes_dict))
+    # print(len(nested_chars), to_sort(nested_chars, strokes_dict))
+    # print(len(enclosed_chars), to_sort(enclosed_chars, strokes_dict))
+    # print(len(upper_lower_chars), to_sort(upper_lower_chars, strokes_dict))
+    # print(len(lr_compo_set), to_sort(lr_compo_set, strokes_dict))
+    # for c in to_sort(lr_compo_set, strokes_dict):
+    #     print(c, ":", to_sort(lr_compo_dict[c], strokes_dict))
 
 
 if __name__ == '__main__':
     # process_chinese_strokes()
     extract_split_info()
-    
+
     print("Done !")

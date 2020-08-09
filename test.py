@@ -11,7 +11,7 @@ np_im = np.array(im)
 tf_im = tf.constant(np_im)
 print(tf_im.dtype)
 
-img = tf.image.grayscale_to_rgb(tf_im[:,:,tf.newaxis])
+img = tf.image.grayscale_to_rgb(tf_im[:, :, tf.newaxis])
 
 # scale image to fixed size
 fixed_size = tf.constant([640, 640], dtype=tf.float32)  # 16的倍数
@@ -21,7 +21,7 @@ new_size = tf.cast(raw_shape * scale_ratio, dtype=tf.int32)
 img = tf.image.resize(img, size=new_size)
 delta = tf.cast(fixed_size, tf.int32) - new_size
 dh, dw = delta[0], delta[1]
-img = tf.pad(img, paddings=[[0, dh], [0, dw], [0, 0]], mode='CONSTANT', constant_values=255) # fixed_size, 白底黑字
+img = tf.pad(img, paddings=[[0, dh], [0, dw], [0, 0]], mode='CONSTANT', constant_values=255)  # fixed_size, 白底黑字
 
 # image = tf.image.random_brightness(img, max_delta=0.5)
 # image = tf.image.random_contrast(image, lower=0.5, upper=2.)
@@ -39,15 +39,15 @@ img = tf.pad(img, paddings=[[0, dh], [0, dw], [0, 0]], mode='CONSTANT', constant
 noise = tf.random.normal(img.shape, mean=0.0, stddev=30.0)
 
 img = img + noise
-img = tf.where(img<0, 0, img)
-img = tf.where(img>255, 255, img)
+img = tf.where(img < 0, 0, img)
+img = tf.where(img > 255, 255, img)
 img = tf.cast(img, tf.uint8)
 
 for i in range(100):
     print(i, img.dtype)
-    
+
     # ****************************
-    delta = -1+i*2/100
+    delta = -1 + i * 2 / 100
     im = tf.image.adjust_brightness(img, delta=delta)
     print(im.dtype)
     np_im = im.numpy().astype(np.uint8)
@@ -80,7 +80,7 @@ for i in range(100):
     jpeg_quality = 0 + i
     im = tf.image.adjust_jpeg_quality(img, jpeg_quality=jpeg_quality)
     print(im.dtype)
-    np_im = (im.numpy()*255).astype(np.uint8)
+    np_im = (im.numpy() * 255).astype(np.uint8)
     # print(np_im)
     p_im = Image.fromarray(np_im)
     check_or_makedirs(os.path.join("..", "tf_image", "jpeg_quality"))
@@ -88,7 +88,7 @@ for i in range(100):
     p_im.save(im_path, format="jpeg")
 
     # ****************************
-    saturation_factor = 0 + i*100/100
+    saturation_factor = 0 + i * 100 / 100
     im = tf.image.adjust_saturation(img, saturation_factor=saturation_factor)
     print(im.dtype)
     np_im = im.numpy().astype(np.uint8)
@@ -96,6 +96,3 @@ for i in range(100):
     check_or_makedirs(os.path.join("..", "tf_image", "saturation"))
     im_path = os.path.join("..", "tf_image", "saturation", "saturation_factor_" + str(saturation_factor) + ".jpg")
     p_im.save(im_path, format="jpeg")
-    
-    
-    

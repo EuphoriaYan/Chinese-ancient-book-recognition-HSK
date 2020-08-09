@@ -18,7 +18,7 @@ from tensorflow.keras import layers, backend
 
 def conv_block(x, growth, name):
     """A building block for a dense block."""
-    
+
     bn_axis = 3  # image data format: channels_last
     x1 = layers.BatchNormalization(axis=bn_axis,
                                    epsilon=1.001e-5,
@@ -40,7 +40,7 @@ def conv_block(x, growth, name):
 
 def dense_block(x, blocks, name):
     """A dense block."""
-    
+
     for i in range(blocks):
         x = conv_block(x, 32, name=name + '_block' + str(i + 1))
     return x
@@ -48,7 +48,7 @@ def dense_block(x, blocks, name):
 
 def transition_block(x, reduction_rate, name):
     """A transition block."""
-    
+
     bn_axis = 3  # image data format: channels_last
     x = layers.BatchNormalization(axis=bn_axis, epsilon=1.001e-5,
                                   name=name + '_bn')(x)
@@ -68,7 +68,7 @@ def DenseNet(x,
     """Instantiates the DenseNet architecture."""
 
     bn_axis = 3  # image data format: channels_last
-    
+
     x = layers.ZeroPadding2D(padding=((2, 2), (2, 2)))(x)
     x = layers.Conv2D(64, 5, strides=2, use_bias=False, name='conv1/conv')(x)
     # x = layers.BatchNormalization(
@@ -76,11 +76,11 @@ def DenseNet(x,
     # x = layers.Activation('relu', name='conv1/relu')(x)
     # x = layers.ZeroPadding2D(padding=((1, 1), (1, 1)))(x)
     # x = layers.MaxPooling2D(3, strides=2, name='pool1')(x)
-    
-    for i in range(len(blocks)-1):
-        x = dense_block(x, blocks[i], name='conv%d'%(i+2))
-        x = transition_block(x, 0.5, name='pool%d'%(i+2))
-    x = dense_block(x, blocks[-1], name='conv%d'%(len(blocks)-1+2))
+
+    for i in range(len(blocks) - 1):
+        x = dense_block(x, blocks[i], name='conv%d' % (i + 2))
+        x = transition_block(x, 0.5, name='pool%d' % (i + 2))
+    x = dense_block(x, blocks[-1], name='conv%d' % (len(blocks) - 1 + 2))
 
     x = layers.BatchNormalization(
         axis=bn_axis, epsilon=1.001e-5, name='bn')(x)
@@ -94,7 +94,7 @@ def DenseNet(x,
             x = layers.GlobalAveragePooling2D(name='avg_pool')(x)
         elif pooling == 'max':
             x = layers.GlobalMaxPooling2D(name='max_pool')(x)
-    
+
     return x
 
 
@@ -113,11 +113,11 @@ def DenseNet60_for_ctpn(inputs, scope="densenet"):
 
 def DenseNet73_for_yolo(inputs, scope="densenet"):
     blocks = [3, 9, 8, 8, 6]
-    
+
     with backend.name_scope(scope):
         x = layers.ZeroPadding2D(padding=((2, 2), (2, 2)))(inputs)
         x = layers.Conv2D(64, 5, strides=2, use_bias=False, name='conv1/conv')(x)
-        
+
         x_list = []
         for i in range(len(blocks) - 1):
             x = dense_block(x, blocks[i], name='conv%d' % (i + 2))
@@ -125,19 +125,19 @@ def DenseNet73_for_yolo(inputs, scope="densenet"):
             x = transition_block(x, 0.5, name='pool%d' % (i + 2))
         x = dense_block(x, blocks[-1], name='conv%d' % (len(blocks) - 1 + 2))
         x_list.append(x)
-        
+
         bn_axis = 3  # image data format: channels_last
         features_list = []
         for i, x in enumerate(x_list[-3:]):
             x = layers.BatchNormalization(axis=bn_axis, epsilon=1.001e-5,
-                                          name='post_bn_%d'%i)(x)
-            feat = layers.Activation('relu', name='post_relu_%d'%i)(x)
+                                          name='post_bn_%d' % i)(x)
+            feat = layers.Activation('relu', name='post_relu_%d' % i)(x)
             features_list.append(feat)
-        
+
     return features_list
 
 
-def DenseNet60_segment_book_page(inputs, feat_stride=16, scope="densenet"): # 60 or 65
+def DenseNet60_segment_book_page(inputs, feat_stride=16, scope="densenet"):  # 60 or 65
     blocks = [3, 9, 8, 8] if feat_stride == 16 else [3, 9, 8, 8, 2]
     with backend.name_scope(scope):
         outputs = DenseNet(inputs, blocks=blocks)  # 1/16 or 1/32
@@ -145,7 +145,7 @@ def DenseNet60_segment_book_page(inputs, feat_stride=16, scope="densenet"): # 60
     return outputs
 
 
-def DenseNet26_segment_text_line(inputs, feat_stride=16, scope="densenet"): # 36 or 39
+def DenseNet26_segment_text_line(inputs, feat_stride=16, scope="densenet"):  # 36 or 39
     blocks = [2, 3, 3, 3] if feat_stride == 16 else [2, 3, 3, 3, 2]
     with backend.name_scope(scope):
         outputs = DenseNet(inputs, blocks=blocks)  # 1/16 or 1/32
@@ -153,7 +153,7 @@ def DenseNet26_segment_text_line(inputs, feat_stride=16, scope="densenet"): # 36
     return outputs
 
 
-def DenseNet36_segment_mix_line(inputs, feat_stride=16, scope="densenet"): # 36 or 39
+def DenseNet36_segment_mix_line(inputs, feat_stride=16, scope="densenet"):  # 36 or 39
     blocks = [3, 5, 4, 4] if feat_stride == 16 else [3, 4, 4, 4, 2]
     with backend.name_scope(scope):
         outputs = DenseNet(inputs, blocks=blocks)  # 1/16 or 1/32
@@ -161,7 +161,7 @@ def DenseNet36_segment_mix_line(inputs, feat_stride=16, scope="densenet"): # 36 
     return outputs
 
 
-def DenseNet26_segment_double_line(inputs, feat_stride=16, scope="densenet"): # 36 or 39
+def DenseNet26_segment_double_line(inputs, feat_stride=16, scope="densenet"):  # 36 or 39
     blocks = [2, 3, 3, 3] if feat_stride == 16 else [2, 3, 3, 3, 2]
     with backend.name_scope(scope):
         outputs = DenseNet(inputs, blocks=blocks)  # 1/16 or 1/32
@@ -170,8 +170,8 @@ def DenseNet26_segment_double_line(inputs, feat_stride=16, scope="densenet"): # 
 
 
 def DenseNet35_for_char_recog(inputs, feat_stride=16, scope="densenet"):
-    blocks = [3, 5, 8] if feat_stride//8 == 1 else [3, 5, 5, 5]
+    blocks = [3, 5, 8] if feat_stride // 8 == 1 else [3, 5, 5, 5]
     with backend.name_scope(scope):
-        outputs = DenseNet(inputs, blocks=blocks)   # 1/8 or 1/16
+        outputs = DenseNet(inputs, blocks=blocks)  # 1/8 or 1/16
         # outputs = DenseNet(inputs, blocks=[1, 1, 1, 1])  # for test
     return outputs

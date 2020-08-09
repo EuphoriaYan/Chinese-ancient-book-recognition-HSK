@@ -14,19 +14,19 @@ from config import CTPN_NET_STRIDE, BOOK_PAGE_FIXED_SIZE, BOOK_PAGE_MAX_GT_BOXES
 def get_image_and_boxes(annotation_line):
     line = annotation_line.split()
     PIL_img = Image.open(line[0])
-    
+
     if PIL_img.mode != "L":
         PIL_img = PIL_img.convert("L")
-    
+
     np_img = np.array(PIL_img, dtype=np.uint8)
     boxes = [list(map(int, box.split(','))) for box in line[1:]]
     boxes = np.array(boxes, dtype=np.float32)
-    
+
     return np_img, boxes
 
 
 def change_text_vertical_to_horisontal(np_img, boxes=None):
-    axes = (1,0) if len(np_img.shape) == 2 else (1,0,2)
+    axes = (1, 0) if len(np_img.shape) == 2 else (1, 0, 2)
     np_img = np_img.transpose(axes)[::-1, ...]
 
     if boxes is not None:
@@ -36,23 +36,23 @@ def change_text_vertical_to_horisontal(np_img, boxes=None):
         x1_flip, y1_flip, x2_flip, y2_flip = x1_tr, w - 1 - y1_tr, x2_tr, w - 1 - y2_tr  # upside-down
         x1_result, y1_result, x2_result, y2_result = x1_flip, y2_flip, x2_flip, y1_flip
         boxes[:, 0], boxes[:, 1], boxes[:, 2], boxes[:, 3] = x1_result, y1_result, x2_result, y2_result
-    
+
     return np_img, boxes
 
 
 def change_text_vertical_to_horisontal_tf(image, boxes=None):
     h, w = tf.shape(image)[0], tf.shape(image)[1]
     h, w = tf.cast(h, tf.float32), tf.cast(w, tf.float32)
-    perm = (1,0) if len(image.shape) == 2 else (1,0,2)
+    perm = (1, 0) if len(image.shape) == 2 else (1, 0, 2)
     image = tf.transpose(image, perm=perm)[::-1]
-    
+
     if boxes is not None:
         x1, y1, x2, y2 = boxes[:, 0], boxes[:, 1], boxes[:, 2], boxes[:, 3]
         x1_tr, y1_tr, x2_tr, y2_tr = y1, x1, y2, x2
         x1_flip, y1_flip, x2_flip, y2_flip = x1_tr, w - 1 - y1_tr, x2_tr, w - 1 - y2_tr  # upside-down
         x1_result, y1_result, x2_result, y2_result = x1_flip, y2_flip, x2_flip, y1_flip
         boxes = tf.stack([x1_result, y1_result, x2_result, y2_result], axis=1)
-    
+
     return image, boxes
 
 
@@ -67,24 +67,24 @@ def restore_text_horizontal_to_vertical(horizontal_text_img):
 
 def restore_boxes_horizontal_to_vertical(boxes, raw_img_shape):
     h, w = raw_img_shape[:2]
-    
+
     x1_result, y1_result, x2_result, y2_result = boxes[:, 0], boxes[:, 1], boxes[:, 2], boxes[:, 3]
     x1_flip, y1_flip, x2_flip, y2_flip = x1_result, y2_result, x2_result, y1_result
-    x1_tr, y1_tr, x2_tr, y2_tr = x1_flip, w-1-y1_flip, x2_flip, w-1-y2_flip
+    x1_tr, y1_tr, x2_tr, y2_tr = x1_flip, w - 1 - y1_flip, x2_flip, w - 1 - y2_flip
     x1, y1, x2, y2 = y1_tr, x1_tr, y2_tr, x2_tr
     boxes[:, 0], boxes[:, 1], boxes[:, 2], boxes[:, 3] = x1, y1, x2, y2
-    
+
     return boxes
 
 
 def pack_book_pages(imgs_list, boxes_list, background="white"):
     assert len(imgs_list) == len(boxes_list)
     batch_size = len(imgs_list)
-    
+
     num_boxes = max([len(boxes) for boxes in boxes_list])
     batch_boxes = np.zeros(shape=(batch_size, num_boxes, 6), dtype=np.float32)
     # x1, y1, x2, y2, class_id, padding_flag
-    
+
     img_shape = [np_img.shape[:2] for np_img in imgs_list]
     max_h = max([h for (h, w) in img_shape])
     max_w = max([w for (h, w) in img_shape])
@@ -97,32 +97,32 @@ def pack_book_pages(imgs_list, boxes_list, background="white"):
         batch_imgs.fill(0)
     else:
         ValueError("Optional image background: 'white', 'black'.")
-    
+
     for i, np_img in enumerate(imgs_list):
         img_h, img_w = np_img.shape[:2]
         batch_imgs[i, :img_h, :img_w] = np_img
         num = len(boxes_list[i])
-        batch_boxes[i, :num, :5] = boxes_list[i]    # x1, y1, x2, y2, class_id
-        batch_boxes[i, :num, 5] = 1                 # padding_flag, fg:1, bg:0
+        batch_boxes[i, :num, :5] = boxes_list[i]  # x1, y1, x2, y2, class_id
+        batch_boxes[i, :num, 5] = 1  # padding_flag, fg:1, bg:0
     batch_imgs = np.expand_dims(batch_imgs, axis=-1)
-    
+
     return batch_imgs, batch_boxes
 
 
 def split_boxes_to_fixed_width(boxes, cls_id, im_shape):
     x1, y1, x2, y2 = boxes[:, 0], boxes[:, 1], boxes[:, 2], boxes[:, 3]
-    gt_quadrilaterals = np.stack([x1,y1,x2,y1,x2,y2,x1,y2], axis=1)
+    gt_quadrilaterals = np.stack([x1, y1, x2, y1, x2, y2, x1, y2], axis=1)
     gt_boxes, cls_ids = gt_utils.gen_gt_from_quadrilaterals(gt_quadrilaterals,
-                                                            class_ids=np.array([cls_id]*boxes.shape[0]),
+                                                            class_ids=np.array([cls_id] * boxes.shape[0]),
                                                             image_shape=im_shape,
                                                             width_stride=CTPN_NET_STRIDE)
-    gt_boxes = np.concatenate([gt_boxes, cls_ids[:,np.newaxis]], axis=1)
+    gt_boxes = np.concatenate([gt_boxes, cls_ids[:, np.newaxis]], axis=1)
     return gt_boxes
 
 
 def split_boxes_to_fixed_width_tf(boxes, cls_id, im_shape):
     num_boxes = tf.shape(boxes)[0]
-    class_ids = tf.ones(shape=[num_boxes,], dtype=tf.float32) * cls_id
+    class_ids = tf.ones(shape=[num_boxes, ], dtype=tf.float32) * cls_id
     gt_boxes, class_ids = gt_utils.gen_gt_from_boxes_tf(raw_boxes=boxes,
                                                         class_ids=class_ids,
                                                         im_shape=im_shape,
@@ -137,11 +137,11 @@ def adjust_img_and_splite_boxes_tf(image, boxes, cls_id,
     # vertical to horizontal
     if text_type.lower() in ("v", "vertical"):
         image, boxes = change_text_vertical_to_horisontal_tf(image, boxes)
-        
+
     # to rgb
     channels = tf.shape(image)[-1]
     image = tf.cond(channels == 3, lambda: image, lambda: tf.image.grayscale_to_rgb(image))
-    
+
     # scale image to fixed size
     fixed_size = tf.constant([fixed_size[0], fixed_size[1]], dtype=tf.float32)  # 16的倍数
     raw_shape = tf.cast(tf.shape(image)[:2], tf.float32)
@@ -151,51 +151,51 @@ def adjust_img_and_splite_boxes_tf(image, boxes, cls_id,
     boxes = boxes * scale_ratio
     delta = tf.cast(fixed_size, tf.int32) - new_size
     dh, dw = delta[0], delta[1]
-    image = tf.pad(image, paddings=[[0, dh], [0, dw], [0, 0]], mode='CONSTANT', constant_values=255) # fixed_size, 白底黑字
-    
+    image = tf.pad(image, paddings=[[0, dh], [0, dw], [0, 0]], mode='CONSTANT', constant_values=255)  # fixed_size, 白底黑字
+
     # split_boxes_to_fixed_width
     gt_boxes, class_ids = split_boxes_to_fixed_width_tf(boxes, cls_id, im_shape=tf.shape(image)[:2])
-    
+
     gt_boxes = tf.concat([gt_boxes, class_ids[:, tf.newaxis]], axis=1)
     gt_boxes = tf_utils.pad_to_fixed_size(gt_boxes, max_boxes)  # add a padding_flag
-    
+
     # augment image
     image = tf.cast(image, tf.uint8)
     image = tf.image.random_brightness(image, max_delta=0.5)
     image = tf.image.random_contrast(image, lower=0.5, upper=1.)
     image = tf.image.random_hue(image, max_delta=0.5)
     image = tf.image.random_saturation(image, lower=0.5, upper=90)
-    
+
     return image, gt_boxes
 
 
 def adjust_img_into_model(np_img, text_type="horizontal", fixed_size=BOOK_PAGE_FIXED_SIZE):
-    
     # vertical to horizontal
     if text_type.lower() in ("v", "vertical"):
         np_img, _ = change_text_vertical_to_horisontal(np_img)
-        
+
     # to rgb
-    if len(np_img.shape) == 2 or ( len(np_img.shape) == 3 and np_img.shape[-1] == 1):
+    if len(np_img.shape) == 2 or (len(np_img.shape) == 3 and np_img.shape[-1] == 1):
         np_img = Image.fromarray(np_img).convert(mode="RGB")
-        
+
     # scale image to fixed size
     fixed_size = np.array(fixed_size[:2], dtype=np.float32)  # 16的倍数
     raw_shape = np.array(np_img.shape[:2], dtype=np.float32)
     scale_ratio = np.min(fixed_size / raw_shape)
     new_size = (raw_shape * scale_ratio).astype(np.int32)
-    np_img = np.asarray(Image.fromarray(np_img).resize(size=new_size[::-1]))    # PIL (w, h), np (h, w)
+    np_img = np.asarray(Image.fromarray(np_img).resize(size=new_size[::-1]))  # PIL (w, h), np (h, w)
     delta = fixed_size.astype(np.int32) - new_size
     dh, dw = delta[0], delta[1]
-    np_img = np.pad(np_img, pad_width=((0, dh), (0, dw), (0, 0)), mode='constant', constant_values=255)  # fixed_size, 白底黑字
-    
+    np_img = np.pad(np_img, pad_width=((0, dh), (0, dw), (0, 0)), mode='constant',
+                    constant_values=255)  # fixed_size, 白底黑字
+
     return np_img
 
 
 def data_generator_with_images(annotation_lines, batch_size, text_type="horizontal"):
     n = len(annotation_lines)
     if n == 0 or batch_size <= 0: return None
-    
+
     i = 0
     while True:
         imgs_list = []
@@ -209,16 +209,16 @@ def data_generator_with_images(annotation_lines, batch_size, text_type="horizont
             imgs_list.append(np_img)
             boxes_list.append(boxes)
             i = (i + 1) % n
-        
+
         batch_imgs, batch_boxes = pack_book_pages(imgs_list, boxes_list, background="white")
         inputs_dict = {"batch_images": batch_imgs, "batch_boxes": batch_boxes}
-        
+
         yield inputs_dict, None
 
 
 def data_generator_with_tfrecords(tfrecords_files, batch_size, text_type="horizontal"):
     data_set = tf.data.TFRecordDataset(tfrecords_files).repeat()
-    
+
     def parse_fn(serialized_example):
         features = tf.io.parse_single_example(
             serialized_example,
@@ -236,22 +236,21 @@ def data_generator_with_tfrecords(tfrecords_files, batch_size, text_type="horizo
         text_boxes = tf.io.decode_raw(features["text_boxes"], tf.int32)
         text_boxes = tf.reshape(text_boxes, shape=(-1, 4))
         text_boxes = tf.cast(text_boxes, tf.float32)
-        
+
         image, gt_boxes = adjust_img_and_splite_boxes_tf(image, text_boxes, cls_id=1, text_type=text_type)
         image = tf.cast(image, tf.float32)
-        
+
         return {"batch_images": image, "batch_boxes": gt_boxes}
-    
+
     data_set = data_set.map(parse_fn, tf.data.experimental.AUTOTUNE).shuffle(100).batch(batch_size).prefetch(200)
-    
+
     return data_set
 
 
 def image_preprocess(images):
-    
     convert_imgs = tf.image.per_image_standardization(images)
     convert_imgs = tf.cond(tf.random.uniform([]) < 0.5, lambda: convert_imgs, lambda: 1. - convert_imgs)
-    
+
     return convert_imgs
 
 
@@ -260,8 +259,8 @@ def data_generator(data_file, batch_size, src_type="images", text_type="horizont
     with open(data_file, "r", encoding="utf8") as fr:
         lines = [line.strip() for line in fr.readlines()]
     np.random.shuffle(lines)
-    num_train = int(len(lines)*(1-validation_split))
-    
+    num_train = int(len(lines) * (1 - validation_split))
+
     if src_type == "images":
         training_generator = data_generator_with_images(lines[:num_train], batch_size, text_type)
         validation_generator = data_generator_with_images(lines[num_train:], batch_size, text_type)
@@ -270,19 +269,20 @@ def data_generator(data_file, batch_size, src_type="images", text_type="horizont
         validation_generator = data_generator_with_tfrecords(lines[num_train:], batch_size, text_type)
     else:
         ValueError("Optional src type: 'images', 'tfrecords'.")
-        
+
     return training_generator, validation_generator
-    
+
 
 if __name__ == "__main__":
     from config import BOOK_PAGE_TFRECORDS_V
+
     training_generator, validation_generator = \
         data_generator(data_file=os.path.join(BOOK_PAGE_TFRECORDS_V, "..", "book_pages_tags_ctpn.txt"),
                        batch_size=1,
                        src_type="tfrecords",
                        text_type="vertical")
-    
+
     for data in training_generator:
         print(data)
-    
+
     print("Done !")

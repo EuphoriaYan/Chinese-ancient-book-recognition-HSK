@@ -13,5 +13,5 @@ if __name__ == '__main__':
     # segment_double_line_predict()
     # segment_text_line_predict()
     char_predict()
-    
+
     print("Done !")
