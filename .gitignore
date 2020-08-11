@@ -43,3 +43,6 @@ data/
 # Ignored files
 chinese_components/UCS_IDS.txt
 chinese_components/UCS_strokes.txt
+
+# Shufa imgs
+infer/
