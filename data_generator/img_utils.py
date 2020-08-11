@@ -2,6 +2,7 @@
 # Author: hushukai
 
 import platform
+import os
 import sys
 import random
 import math
@@ -38,6 +39,21 @@ def generate_bigger_image_by_font(chinese_char, font_file, image_size=int(CHAR_I
     # bigger_PIL_img.show()
     # print(np.array(bigger_PIL_img).tolist())
     return bigger_PIL_img
+
+
+def generate_bigger_image_by_shufa(chinese_char, shufa_dir, image_size=int(CHAR_IMG_SIZE * 1.2)):
+    height = width = image_size
+
+    pic_path = os.path.join(shufa_dir, chinese_char+'.png')
+    with open(pic_path, 'r') as pic:
+        img = Image.open(pic)
+        img = np.array(img)
+        img = Image.fromarray(img)
+
+    img_size = int(0.85 * width)
+    img = img.resize((img_size, img_size), Image.ANTIALIAS)
+
+    return img
 
 
 def rotate_PIL_image(PIL_img, rotate_angle=0):

@@ -51,6 +51,8 @@ BOOK_PAGE_TFRECORDS_V = os.path.join(DATA_DIR, "book_pages", "tfrecords_vertical
 FONT_FILE_DIR = os.path.join(CURR_DIR, "chinese_fonts")
 FONT_FINISHED_DIR = os.path.join(CURR_DIR, "chinese_fonts_finished")
 
+SHUFA_FILE_DIR = os.path.join(CURR_DIR, "infer")
+
 # EXTERNEL_IMAGES_DIR = os.path.join(CURR_DIR, "../ziku_images")
 EXTERNEL_IMAGES_DIR = "E:/pycharm_project/ziku_images"
 # ************************ generate image data ***************************

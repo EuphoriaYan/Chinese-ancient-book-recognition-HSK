@@ -20,6 +20,7 @@ from config import MIX_TEXT_LINE_IMGS_H, MIX_TEXT_LINE_TAGS_FILE_H
 from config import MIX_TEXT_LINE_IMGS_V, MIX_TEXT_LINE_TAGS_FILE_V
 from config import MIX_TEXT_LINE_TFRECORDS_H, MIX_TEXT_LINE_TFRECORDS_V
 from config import FONT_FILE_DIR, EXTERNEL_IMAGES_DIR, MAX_ROTATE_ANGLE
+from config import SHUFA_FILE_DIR
 from util import CHAR2ID_DICT, IGNORABLE_CHARS, IMPORTANT_CHARS
 
 from util import check_or_makedirs
@@ -27,7 +28,7 @@ from data_generator.img_utils import rotate_PIL_image
 from data_generator.img_utils import find_min_bound_box
 from data_generator.img_utils import adjust_img_and_put_into_background
 from data_generator.img_utils import reverse_image_color
-from data_generator.img_utils import generate_bigger_image_by_font
+from data_generator.img_utils import generate_bigger_image_by_font, generate_bigger_image_by_shufa
 from data_generator.img_utils import load_external_image_bigger
 from data_generator.generate_chinese_images import get_external_image_paths
 
@@ -502,15 +503,20 @@ def create_mix_text_line(shape=(64, 1280), text_type="horizontal", edges=False):
     return PIL_text, text_bbox_list, split_pos
 
 
-def generate_one_row_chars(x, y1, y2, length, np_background, char_spacing):
+def generate_one_row_chars(x, y1, y2, length, np_background, char_spacing, use_img=False):
     # 记录下生成的汉字及其bounding-box
     char_and_box_list = []
 
     row_end = x + length - 1
     row_height = y2 - y1 + 1
     while length >= row_height:
-        chinese_char, bounding_box, x_tail = \
-            generate_char_img_into_unclosed_box(np_background, x1=x, y1=y1, x2=None, y2=y2, char_spacing=char_spacing)
+        chinese_char, bounding_box, x_tail = generate_char_img_into_unclosed_box(
+            np_background,
+            x1=x, y1=y1,
+            x2=None, y2=y2,
+            char_spacing=char_spacing,
+            use_img=use_img
+        )
 
         char_and_box_list.append((chinese_char, bounding_box))
         added_length = x_tail - x
@@ -533,12 +539,12 @@ def generate_one_row_chars(x, y1, y2, length, np_background, char_spacing):
     return x, text_bbox, char_and_box_list, split_pos
 
 
-def generate_two_rows_chars(x, y1, y2, length, np_background, char_spacing):
+def generate_two_rows_chars(x, y1, y2, length, np_background, char_spacing, use_img=False):
     row_height = y2 - y1 + 1
     mid_y = y1 + round(row_height / 2)
 
-    x_1, text1_bbox, _, _ = generate_one_row_chars(x, y1, mid_y, length, np_background, char_spacing)
-    x_2, text2_bbox, _, _ = generate_one_row_chars(x, mid_y + 1, y2, length, np_background, char_spacing)
+    x_1, text1_bbox, _, _ = generate_one_row_chars(x, y1, mid_y, length, np_background, char_spacing, use_img)
+    x_2, text2_bbox, _, _ = generate_one_row_chars(x, mid_y + 1, y2, length, np_background, char_spacing, use_img)
 
     # 获取文本行之间的划分位置
     center_val = (text1_bbox[3] + text2_bbox[1]) // 2
@@ -548,15 +554,20 @@ def generate_two_rows_chars(x, y1, y2, length, np_background, char_spacing):
     return max(x_1, x_2), text1_bbox, text2_bbox, split_pos
 
 
-def generate_one_col_chars(x1, x2, y, length, np_background, char_spacing):
+def generate_one_col_chars(x1, x2, y, length, np_background, char_spacing, use_img=False):
     # 记录下生成的汉字及其bounding-box
     char_and_box_list = []
 
     col_end = y + length - 1
     col_width = x2 - x1 + 1
     while length >= col_width:
-        chinese_char, bounding_box, y_tail = \
-            generate_char_img_into_unclosed_box(np_background, x1=x1, y1=y, x2=x2, y2=None, char_spacing=char_spacing)
+        chinese_char, bounding_box, y_tail = generate_char_img_into_unclosed_box(
+            np_background,
+            x1=x1, y1=y,
+            x2=x2, y2=None,
+            char_spacing=char_spacing,
+            use_img=use_img
+        )
 
         char_and_box_list.append((chinese_char, bounding_box))
         added_length = y_tail - y
@@ -579,12 +590,12 @@ def generate_one_col_chars(x1, x2, y, length, np_background, char_spacing):
     return y, text_bbox, char_and_box_list, split_pos
 
 
-def generate_two_cols_chars(x1, x2, y, length, np_background, char_spacing):
+def generate_two_cols_chars(x1, x2, y, length, np_background, char_spacing, use_img=False):
     col_width = x2 - x1 + 1
     mid_x = x1 + round(col_width / 2)
 
-    y_1, text1_bbox, _, _ = generate_one_col_chars(x1, mid_x, y, length, np_background, char_spacing)
-    y_2, text2_bbox, _, _ = generate_one_col_chars(mid_x + 1, x2, y, length, np_background, char_spacing)
+    y_1, text1_bbox, _, _ = generate_one_col_chars(x1, mid_x, y, length, np_background, char_spacing, use_img)
+    y_2, text2_bbox, _, _ = generate_one_col_chars(mid_x + 1, x2, y, length, np_background, char_spacing, use_img)
 
     # 获取文本行之间的划分位置
     center_val = (text1_bbox[2] + text2_bbox[0]) // 2
@@ -594,7 +605,7 @@ def generate_two_cols_chars(x1, x2, y, length, np_background, char_spacing):
     return max(y_1, y_2), text1_bbox, text2_bbox, split_pos
 
 
-def generate_mix_rows_chars(x, y1, y2, row_length, np_background, char_spacing):
+def generate_mix_rows_chars(x, y1, y2, row_length, np_background, char_spacing, use_img=False):
     row_height = y2 - y1 + 1
     x_start = x
 
@@ -607,11 +618,11 @@ def generate_mix_rows_chars(x, y1, y2, row_length, np_background, char_spacing):
         length = random.randint(row_height, remaining_len)
         flag += 1
         if flag % 2 == 1:
-            x, text_bbox, _, _ = generate_one_row_chars(x, y1, y2, length, np_background, char_spacing)
+            x, text_bbox, _, _ = generate_one_row_chars(x, y1, y2, length, np_background, char_spacing, use_img)
             text_bbox_list.append(text_bbox)
             head_tail_list.append((text_bbox[0], text_bbox[2]))
         else:
-            x, text1_bbox, text2_bbox, _ = generate_two_rows_chars(x, y1, y2, length, np_background, char_spacing)
+            x, text1_bbox, text2_bbox, _ = generate_two_rows_chars(x, y1, y2, length, np_background, char_spacing, use_img)
             text_bbox_list.extend([text1_bbox, text2_bbox])
             head_tail_list.append((min(text1_bbox[0], text2_bbox[0]), max(text1_bbox[2], text2_bbox[2])))
         remaining_len = row_length - (x - x_start)
@@ -630,7 +641,7 @@ def generate_mix_rows_chars(x, y1, y2, row_length, np_background, char_spacing):
     return x, text_bbox_list, split_pos
 
 
-def generate_mix_cols_chars(x1, x2, y, col_length, np_background, char_spacing):
+def generate_mix_cols_chars(x1, x2, y, col_length, np_background, char_spacing, use_img=False):
     col_width = x2 - x1 + 1
     y_start = y
 
@@ -643,11 +654,11 @@ def generate_mix_cols_chars(x1, x2, y, col_length, np_background, char_spacing):
         length = random.randint(col_width, remaining_len)
         flag += 1
         if flag % 2 == 1:
-            y, text_bbox, _, _ = generate_one_col_chars(x1, x2, y, length, np_background, char_spacing)
+            y, text_bbox, _, _ = generate_one_col_chars(x1, x2, y, length, np_background, char_spacing, use_img)
             text_bbox_list.append(text_bbox)
             head_tail_list.append((text_bbox[1], text_bbox[3]))
         else:
-            y, text1_bbox, text2_bbox, _ = generate_two_cols_chars(x1, x2, y, length, np_background, char_spacing)
+            y, text1_bbox, text2_bbox, _ = generate_two_cols_chars(x1, x2, y, length, np_background, char_spacing, use_img)
             text_bbox_list.extend([text1_bbox, text2_bbox])
             head_tail_list.append((min(text1_bbox[1], text2_bbox[1]), max(text1_bbox[3], text2_bbox[3])))
         remaining_len = col_length - (y - y_start)
@@ -666,14 +677,20 @@ def generate_mix_cols_chars(x1, x2, y, col_length, np_background, char_spacing):
     return y, text_bbox_list, split_pos
 
 
-def generate_char_img_into_unclosed_box(np_background, x1, y1, x2=None, y2=None, char_spacing=(0.05, 0.05)):
+def generate_char_img_into_unclosed_box(np_background,
+                                        x1, y1,
+                                        x2=None, y2=None,
+                                        char_spacing=(0.05, 0.05),
+                                        use_img=False):
     if x2 is None and y2 is None:
         raise ValueError("There is one and only one None in (x2, y2).")
     if x2 is not None and y2 is not None:
         raise ValueError("There is one and only one None in (x2, y2).")
 
-    # 图片为黑底白字
-    chinese_char, PIL_char_img = next(Char_Image_Generator)
+    if use_img:
+        chinese_char, PIL_char_img = next(Char_Image_Generator_img)
+    else:
+        chinese_char, PIL_char_img = next(Char_Image_Generator)
 
     # 随机决定是否对汉字图片进行旋转，以及旋转的角度
     if random.random() < 0.35:
@@ -821,6 +838,47 @@ def chinese_char_img_generator_using_font(img_size=64):
                         yield PIL_images_list.pop()
 
 
+def chinese_char_img_generator_using_shufa(img_size=64):
+    print("Get all_chinese_list ...")
+    all_chinese_list = list(CHAR2ID_DICT.keys())
+
+    print("Get samples file_list ...")
+    shufa_dir_list = [os.path.join(SHUFA_FILE_DIR, font_name) for font_name in os.listdir(FONT_FILE_DIR)
+                      if os.path.isdir(os.path.join(SHUFA_FILE_DIR, font_name))]
+
+    PIL_images_list = []
+    while True:
+        random.shuffle(shufa_dir_list)
+        total = len(shufa_dir_list)
+        count = 0
+        for shufa_dir in shufa_dir_list:
+            count += 1
+            print("Char image generator: %d of %d" % (count, total))
+            _all_chinese_list = all_chinese_list.copy()
+            random.shuffle(_all_chinese_list)
+            for chinese_char in _all_chinese_list:
+                if chinese_char in IGNORABLE_CHARS:
+                    continue
+
+                # 生成字体图片
+                bigger_PIL_img = generate_bigger_image_by_shufa(chinese_char, shufa_dir, img_size)
+                # 检查生成的灰度图像是否可用，黑底白字
+                image_data = list(bigger_PIL_img.getdata())
+                if sum(image_data) < 10:
+                    continue
+
+                if chinese_char in IMPORTANT_CHARS:
+                    PIL_images_list += [(chinese_char, bigger_PIL_img)] * random.randint(6, 10)
+                else:
+                    PIL_images_list += [(chinese_char, bigger_PIL_img)] * random.randint(3, 6)
+
+                if len(PIL_images_list) > 10000:
+                    random.shuffle(PIL_images_list)
+                    for i in range(5000):
+                        # 生成一对(chinese_char，bigger_PIL_img)
+                        yield PIL_images_list.pop()
+
+
 def chinese_char_img_generator_using_image():
     print("Get all calligraphy categories ...")
     calligraphy_categories_list = [os.path.join(EXTERNEL_IMAGES_DIR, content)
@@ -862,6 +920,7 @@ def chinese_char_img_generator_using_image():
 
 
 Char_Image_Generator = chinese_char_img_generator_using_font()
+Char_Image_Generator_img = chinese_char_img_generator_using_shufa()
 # Char_Image_Generator = chinese_char_img_generator_using_image()
 
 
