@@ -45,7 +45,7 @@ def generate_bigger_image_by_shufa(chinese_char, shufa_dir, image_size=int(CHAR_
     height = width = image_size
 
     pic_path = os.path.join(shufa_dir, chinese_char+'.png')
-    with open(pic_path, 'r') as pic:
+    with open(pic_path, 'rb') as pic:
         img = Image.open(pic)
         img = np.array(img)
         img = Image.fromarray(img)
