@@ -3,6 +3,11 @@
 
 import os
 import sys
+
+root_path = "/".join(os.path.realpath(__file__).split("/")[:-2])
+if root_path not in sys.path:
+    sys.path.insert(0, root_path)
+
 import json
 import random
 import cv2
