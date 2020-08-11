@@ -843,8 +843,8 @@ def chinese_char_img_generator_using_shufa(img_size=64):
     all_chinese_list = list(CHAR2ID_DICT.keys())
 
     print("Get samples file_list ...")
-    shufa_dir_list = [os.path.join(SHUFA_FILE_DIR, font_name) for font_name in os.listdir(FONT_FILE_DIR)
-                      if os.path.isdir(os.path.join(SHUFA_FILE_DIR, font_name))]
+    shufa_dir_list = [os.path.join(SHUFA_FILE_DIR, writer_name) for writer_name in os.listdir(SHUFA_FILE_DIR)
+                      if os.path.isdir(os.path.join(SHUFA_FILE_DIR, writer_name))]
 
     if len(shufa_dir_list) == 0:
         raise ValueError('No dir in ' + SHUFA_FILE_DIR)
