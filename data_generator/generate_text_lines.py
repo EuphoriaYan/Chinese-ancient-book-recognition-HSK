@@ -846,6 +846,9 @@ def chinese_char_img_generator_using_shufa(img_size=64):
     shufa_dir_list = [os.path.join(SHUFA_FILE_DIR, font_name) for font_name in os.listdir(FONT_FILE_DIR)
                       if os.path.isdir(os.path.join(SHUFA_FILE_DIR, font_name))]
 
+    if len(shufa_dir_list) == 0:
+        raise ValueError('No dir in ' + SHUFA_FILE_DIR)
+
     PIL_images_list = []
     while True:
         random.shuffle(shufa_dir_list)
