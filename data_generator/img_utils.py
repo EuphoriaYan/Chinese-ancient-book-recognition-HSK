@@ -48,6 +48,7 @@ def generate_bigger_image_by_shufa(chinese_char, shufa_dir, image_size=int(CHAR_
     with open(pic_path, 'rb') as pic:
         img = Image.open(pic)
         img = np.array(img)
+        img = reverse_image_color(np_img=img)
         img = Image.fromarray(img)
 
     img_size = int(0.85 * width)

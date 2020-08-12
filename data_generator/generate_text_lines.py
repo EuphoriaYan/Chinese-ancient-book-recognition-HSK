@@ -687,6 +687,7 @@ def generate_char_img_into_unclosed_box(np_background,
     if x2 is not None and y2 is not None:
         raise ValueError("There is one and only one None in (x2, y2).")
 
+    # 生成白底黑字的字，包含文字
     if use_img:
         chinese_char, PIL_char_img = next(Char_Image_Generator_img)
     else:
