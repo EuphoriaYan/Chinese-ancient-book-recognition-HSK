@@ -443,7 +443,7 @@ def display_tfrecords(tfrecords_file):
 
 if __name__ == '__main__':
     # generate_book_page_imgs(obj_num=100, text_type="horizontal", page_shape=(416, 416))
-    generate_book_page_imgs_with_img(obj_num=5, text_type="vertical")
+    generate_book_page_imgs_with_img(obj_num=5, text_type="vertical", page_shape=(1024, 2048))
     # generate_book_page_imgs(obj_num=5, text_type="vertical")
     # generate_book_page_tfrecords(obj_num=100, text_type="horizontal")
     # generate_book_page_tfrecords(obj_num=10000, text_type="vertical", init_num=0)
