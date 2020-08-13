@@ -316,6 +316,8 @@ def create_book_page_with_img(shape=(960, 540), text_type="horizontal"):
             y1, y2 = ys[i] + 1, ys[i + 1] - 1
             x = margin_w + int(random.uniform(0.0, 1) * margin_line_thickness)
             row_length = page_width - x - margin_w
+            if random.random() < 0.3:
+                row_length = int(random.uniform(0.2, 1) * row_length)
             _, text_bbox_list, _ = generate_mix_rows_chars(x, y1, y2, row_length, np_page, char_spacing, use_img=True)
             text_bbox_records_list.extend(text_bbox_list)
             if len(text_bbox_list) == 2:
@@ -359,6 +361,8 @@ def create_book_page_with_img(shape=(960, 540), text_type="horizontal"):
             x1, x2 = xs[i - 1] + 1, xs[i] - 1
             y = margin_h + int(random.uniform(0.0, 1) * margin_line_thickness)
             col_length = page_height - y - margin_h
+            if random.random() < 0.3:
+                col_length = int(random.uniform(0.2, 1) * col_length)
             _, text_bbox_list, _ = generate_mix_cols_chars(x1, x2, y, col_length, np_page, char_spacing, use_img=True)
             text_bbox_records_list.extend(text_bbox_list)
 
