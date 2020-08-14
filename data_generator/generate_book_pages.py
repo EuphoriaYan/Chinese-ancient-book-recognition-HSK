@@ -314,7 +314,7 @@ def create_book_page_with_img(shape=(960, 540), text_type="horizontal"):
         # 逐行生成汉字
         for i in range(len(ys) - 1):
             y1, y2 = ys[i] + 1, ys[i + 1] - 1
-            x = margin_w + int(random.uniform(0.0, 1) * margin_line_thickness)
+            x = margin_w + int(random.uniform(1.0, 1.5) * margin_line_thickness)
             row_length = page_width - x - margin_w
             if random.random() < 0.3:
                 row_length = int(random.uniform(0.2, 1) * row_length)
