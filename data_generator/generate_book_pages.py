@@ -358,16 +358,24 @@ def create_book_page_with_img(shape=(960, 540), text_type="horizontal"):
         # 随机决定字符间距占列距的比例
         char_spacing = (random.uniform(0.0, 0.2), random.uniform(0.02, 0.15))  # (高方向, 宽方向)
 
+        ys = [0 for i in range(len(xs))]
+        col_lengths = [0 for i in range(len(xs))]
+
+        for i in range(len(xs) - 1, 0, -1):
+            x1, x2 = xs[i - 1] + 1, xs[i] - 1
+            ys[i] = margin_h + int(random.uniform(0.0, 1) * margin_line_thickness)
+            col_lengths[i] = page_height - ys[i] - margin_h
+            if random.random() < 0.3:
+                yy = col_lengths[i] + margin_h + margin_line_thickness
+                if draw is not None:
+                    draw.line([(x1, yy), (x2, yy)], fill="white", width=line_thickness)
+                    np_page = np.array(PIL_page, dtype=np.uint8)
+
         # 逐列生成汉字，最右边为第一列
         for i in range(len(xs) - 1, 0, -1):
             x1, x2 = xs[i - 1] + 1, xs[i] - 1
-            y = margin_h + int(random.uniform(0.0, 1) * margin_line_thickness)
-            col_length = page_height - y - margin_h
-            if random.random() < 0.3:
-                col_length = int(random.uniform(0.2, 1) * col_length)
-                if draw is not None:
-                    yy = col_length + margin_h + margin_line_thickness
-                    draw.line([(x1, yy), (x2, yy)], fill="white", width=line_thickness)
+            y = ys[i]
+            col_length = col_lengths[i]
             _, text_bbox_list, _ = generate_mix_cols_chars(x1, x2, y, col_length, np_page, char_spacing, use_img=True)
             text_bbox_records_list.extend(text_bbox_list)
 

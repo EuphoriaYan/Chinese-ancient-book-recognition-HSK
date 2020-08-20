@@ -876,9 +876,9 @@ def chinese_char_img_generator_using_shufa(img_size=64):
                 else:
                     PIL_images_list += [(chinese_char, bigger_PIL_img)] * random.randint(3, 6)
 
-                if len(PIL_images_list) > 100000:
+                if len(PIL_images_list) > 1000:
                     random.shuffle(PIL_images_list)
-                    for i in range(50000):
+                    for i in range(500):
                         # 生成一对(chinese_char，bigger_PIL_img)
                         yield PIL_images_list.pop()
 
