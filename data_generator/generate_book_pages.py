@@ -366,10 +366,12 @@ def create_book_page_with_img(shape=(960, 540), text_type="horizontal"):
             ys[i] = margin_h + int(random.uniform(0.0, 1) * margin_line_thickness)
             col_lengths[i] = page_height - ys[i] - margin_h
             if random.random() < 0.3:
+                col_lengths[i] = int(random.uniform(0.2, 1) * col_lengths[i])
                 yy = col_lengths[i] + margin_h + margin_line_thickness
                 if draw is not None:
                     draw.line([(x1, yy), (x2, yy)], fill="white", width=line_thickness)
                     np_page = np.array(PIL_page, dtype=np.uint8)
+                    Image.fromarray(np_page).show()
 
         # 逐列生成汉字，最右边为第一列
         for i in range(len(xs) - 1, 0, -1):
