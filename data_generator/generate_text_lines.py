@@ -868,7 +868,7 @@ def chinese_char_img_generator_using_shufa(img_size=64):
                 bigger_PIL_img = generate_bigger_image_by_shufa(chinese_char, shufa_dir, img_size)
                 # 检查生成的灰度图像是否可用，黑底白字
                 image_data = list(bigger_PIL_img.getdata())
-                if sum(image_data)/len(image_data) < 1:
+                if sum(image_data)/len(image_data) < 2:
                     continue
 
                 if chinese_char in IMPORTANT_CHARS:

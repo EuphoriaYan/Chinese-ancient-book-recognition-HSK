@@ -318,6 +318,8 @@ def create_book_page_with_img(shape=(960, 540), text_type="horizontal"):
             row_length = page_width - x - margin_w
             if random.random() < 0.3:
                 row_length = int(random.uniform(0.2, 1) * row_length)
+                if draw is not None:
+                    draw.line([(x, y1), (x - margin_w, y2)], fill="white", width=line_thickness)
             _, text_bbox_list, _ = generate_mix_rows_chars(x, y1, y2, row_length, np_page, char_spacing, use_img=True)
             text_bbox_records_list.extend(text_bbox_list)
             if len(text_bbox_list) == 2:
