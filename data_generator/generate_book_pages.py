@@ -371,7 +371,7 @@ def create_book_page_with_img(shape=(960, 540), text_type="horizontal"):
                 if draw is not None:
                     draw.line([(x1, yy), (x2, yy)], fill="white", width=line_thickness)
                     np_page = np.array(PIL_page, dtype=np.uint8)
-                    Image.fromarray(np_page).show()
+                    # Image.fromarray(np_page).show()
 
         # 逐列生成汉字，最右边为第一列
         for i in range(len(xs) - 1, 0, -1):
