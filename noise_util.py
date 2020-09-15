@@ -1,6 +1,7 @@
 
 from PIL import Image
 import numpy as np
+from tqdm import tqdm
 import random
 import math
 
@@ -9,26 +10,27 @@ def cal_dis(pA, pB):
     return math.sqrt((pA[0] - pB[0])**2 + (pA[1] - pB[1])**2)
 
 
-def add_noise(img):
+def add_noise(img, generate_ratio=0.001, generate_size=0.003):
     if not isinstance(img, np.ndarray):
         img = np.array(img)
     h, w = img.shape
-    R = random.randint(1, 3)
-    P_noise_x = random.randint(R, w - R)
-    P_noise_y = random.randint(R, h - R)
-    for i in range(h):
-        for j in range(w):
-            if cal_dis((i, j), (P_noise_x, P_noise_y)) < R:
+    R_max = max(3, int(min(h, w) * generate_size))
+    for _ in range(int(h * w * generate_ratio)):
+        R = random.randint(1, R_max)
+        P_noise_x = random.randint(R, w - 1 - R)
+        P_noise_y = random.randint(R, h - 1 - R)
+        for i in range(P_noise_x - R, P_noise_x + R):
+            for j in range(P_noise_y - R, P_noise_y + R):
+                if cal_dis((i, j), (P_noise_x, P_noise_y)) < R:
+                    if random.random() < 0.8:
+                        img[j][i] = 0
+        R = random.randint(1, R_max * 2)
+        P_noise_x = random.randint(0, w - 1 - R)
+        P_noise_y = random.randint(0, h - 1 - R)
+        for i in range(P_noise_x + 1, P_noise_x + R):
+            for j in range(P_noise_y + 1, P_noise_y + R):
                 if random.random() < 0.8:
-                    img[i][j] = 0
-    R = random.randint(1, 6)
-    P_noise_x = random.randint(R, w - R)
-    P_noise_y = random.randint(R, h - R)
-    for i in range(h):
-        for j in range(w):
-            if P_noise_x < j < P_noise_x + R and P_noise_y < i < P_noise_y + R:
-                if random.random() < 0.8:
-                    img[i][j] = 0
+                    img[j][i] = 0
     img = Image.fromarray(img)
     return img
 
