@@ -12,16 +12,13 @@ from pprint import pprint
 import json
 import random
 import cv2
+import re
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 from queue import Queue
+from torchvision import transforms
+from torch import nn
 
-from config import ONE_TEXT_LINE_IMGS_H, ONE_TEXT_LINE_TAGS_FILE_H
-from config import ONE_TEXT_LINE_IMGS_V, ONE_TEXT_LINE_TAGS_FILE_V
-from config import TWO_TEXT_LINE_IMGS_H, TWO_TEXT_LINE_TAGS_FILE_H
-from config import TWO_TEXT_LINE_IMGS_V, TWO_TEXT_LINE_TAGS_FILE_V
-from config import MIX_TEXT_LINE_IMGS_H, MIX_TEXT_LINE_TAGS_FILE_H
-from config import MIX_TEXT_LINE_IMGS_V, MIX_TEXT_LINE_TAGS_FILE_V
 from config import FONT_FILE_DIR, EXTERNEL_IMAGES_DIR, MAX_ROTATE_ANGLE
 from config import BOOK_PAGE_SHAPE_LIST
 from config import SHUFA_FILE_DIR
@@ -34,9 +31,6 @@ from data_generator.img_utils import rotate_PIL_image
 from data_generator.img_utils import find_min_bound_box
 from data_generator.img_utils import adjust_img_and_put_into_background
 from data_generator.img_utils import reverse_image_color
-from data_generator.img_utils import generate_bigger_image_by_font, generate_bigger_image_by_shufa
-from data_generator.img_utils import load_external_image_bigger
-from data_generator.generate_chinese_images import get_external_image_paths
 
 
 def check_text_type(text_type):
@@ -65,10 +59,11 @@ class generate_text_lines_with_text_handle:
         self.font_path = []
         for file in os.listdir(font_path):
             ext = os.path.splitext(file)[-1].lower()
-            if ext in ['ttf', 'otf']:
+            if ext in ['.ttf', '.otf', '.ttc', '.fon']:
                 self.font_path.append(os.path.join(font_path, file))
         if not len(self.font_path):
             raise ValueError('Find 0 font file in {}'.format(font_path))
+        self.cur_font = None
         self.char_size = char_size
 
     def generate_book_page_with_text(self, init_num=0):
@@ -92,12 +87,11 @@ class generate_text_lines_with_text_handle:
                     shape = self.shape
 
                 font = random.choice(self.font_path)
-                font = ImageFont.truetype(font, size=self.char_size)
+                self.cur_font = ImageFont.truetype(font, size=self.char_size)
 
                 PIL_page, text_bbox_list, text_list = self.create_book_page_with_text(
                     shape,
-                    text_type=text_type,
-                    font=font
+                    text_type=text_type
                 )
 
                 image_tags = {"text_bbox_list": text_bbox_list, "text_list": text_list}
@@ -111,7 +105,7 @@ class generate_text_lines_with_text_handle:
                     print(" %d / %d Done" % (i, obj_num))
                     sys.stdout.flush()
 
-    def create_book_page_with_text(self, shape, text_type, font):
+    def create_book_page_with_text(self, shape, text_type):
         text_type = check_text_type(text_type)
 
         # 黑色背景书页
@@ -193,7 +187,7 @@ class generate_text_lines_with_text_handle:
                 x1, x2 = xs[i - 1] + 1, xs[i] - 1
                 y = margin_h + int(random.uniform(0.0, 1) * margin_line_thickness)
                 col_length = page_height - y - margin_h
-                text_bbox_list, text_list, text = self.generate_mix_cols_chars_with_text(
+                _, text_bbox_list, text_list = self.generate_mix_cols_chars_with_text(
                     x1, x2, y, col_length, np_page, char_spacing
                 )
                 text_bbox_records_list.extend(text_bbox_list)
@@ -254,53 +248,135 @@ class generate_text_lines_with_text_handle:
             length = random.randint(col_width, remaining_len)
             flag += 1
             if flag % 2 == 1:
-                y, text_bbox, _, _ = generate_one_col_chars(x1, x2, y, length, np_background, char_spacing)
+                y, text_bbox, text = self.generate_one_col_chars_with_text(
+                    x1, x2, y, length, np_background, char_spacing
+                )
                 text_bbox_list.append(text_bbox)
+                text_list.append(text)
             else:
-                y, text1_bbox, text2_bbox, _ = generate_two_cols_chars(x1, x2, y, length, np_background, char_spacing)
+                y, text1_bbox, text2_bbox, text1, text2 = self.generate_two_cols_chars_with_text(
+                    x1, x2, y, length, np_background, char_spacing
+                )
                 text_bbox_list.extend([text1_bbox, text2_bbox])
+                text_bbox_list.append(text1_bbox)
+                text_list.append(text1)
+                text_bbox_list.append(text2_bbox)
+                text_list.append(text2)
             remaining_len = col_length - (y - y_start)
 
         # pure_two_lines = True if len(text_bbox_list) == 2 else False    # 1,2,1,2,... or 2,1,2,1,...
 
-        # 获取单双行的划分位置
-        char_spacing_h = round(col_width * char_spacing[0])
-        head_y1, tail_y2 = head_tail_list[0][0], head_tail_list[-1][1]
-        split_pos = [head_y1, ]
-        for i in range(len(head_tail_list) - 1):
-            y_cent = (head_tail_list[i][1] + head_tail_list[i + 1][0]) // 2
-            split_pos.append(y_cent)
-        split_pos.append(tail_y2)
+        return y, text_bbox_list, text_list
 
-        return y, text_bbox_list, split_pos
+    def generate_one_row_chars_with_text(self, x, y1, y2, length, np_background, char_spacing, text=''):
+        """
+        :return: x, text_bbox, text
+        """
+        # 记录下生成的汉字及其bounding-box
+        char_and_box_list = []
 
-    def generate_char_img_into_unclosed_box_with_text(
+        row_end = x + length - 1
+        row_height = y2 - y1 + 1
+        while length >= row_height:
+            chinese_char, bounding_box, x_tail = self.generate_char_img_into_unclosed_box_with_text(
+                np_background,
+                x1=x, y1=y1,
+                x2=None, y2=y2,
+                char_spacing=char_spacing,
+            )
+
+            char_and_box_list.append((chinese_char, bounding_box))
+            added_length = x_tail - x
+            length -= added_length
+            x = x_tail
+
+        # 获取文本行的bounding-box
+        head_x1, head_y1, _, _ = char_and_box_list[0][1]
+        _, _, tail_x2, tail_y2 = char_and_box_list[-1][1]
+        text_bbox = (head_x1, head_y1, tail_x2, tail_y2)
+        text = [char_and_box[0] for char_and_box in char_and_box_list]
+
+        return x, text_bbox, text
+
+    def generate_two_rows_chars_with_text(self, x, y1, y2, length, np_background, char_spacing, text=''):
+        row_height = y2 - y1 + 1
+        mid_y = y1 + round(row_height / 2)
+
+        # x, text_bbox, text
+        x_1, text1_bbox, text1 = self.generate_one_row_chars_with_text(
+            x, y1, mid_y, length, np_background, char_spacing)
+        x_2, text2_bbox, text2 = self.generate_one_row_chars_with_text(
+            x, mid_y + 1, y2, length, np_background, char_spacing)
+
+        return max(x_1, x_2), text1_bbox, text2_bbox, text1, text2
+
+    def generate_one_col_chars_with_text(self, x1, x2, y, length, np_background, char_spacing):
+        # 记录下生成的汉字及其bounding-box
+        char_and_box_list = []
+
+        col_end = y + length - 1
+        col_width = x2 - x1 + 1
+        while length >= col_width:
+            chinese_char, bounding_box, y_tail = self.generate_char_img_into_unclosed_box_with_text(
+                np_background,
+                x1=x1, y1=y,
+                x2=x2, y2=None,
+                char_spacing=char_spacing,
+            )
+
+            char_and_box_list.append((chinese_char, bounding_box))
+            added_length = y_tail - y
+            length -= added_length
+            y = y_tail
+
+        # 获取文本行的bounding-box
+        head_x1, head_y1, _, _ = char_and_box_list[0][1]
+        _, _, tail_x2, tail_y2 = char_and_box_list[-1][1]
+        text_bbox = (head_x1, head_y1, tail_x2, tail_y2)
+        text = [char_and_box[0] for char_and_box in char_and_box_list]
+
+        return y, text_bbox, text
+
+    def generate_two_cols_chars_with_text(self, x1, x2, y, length, np_background, char_spacing):
+        col_width = x2 - x1 + 1
+        mid_x = x1 + round(col_width / 2)
+
+        y_1, text1_bbox, text1 = self.generate_one_col_chars_with_text(
+            mid_x + 1, x2, y, length, np_background, char_spacing)
+        y_2, text2_bbox, text2 = self.generate_one_col_chars_with_text(
+            x1, mid_x, y, length, np_background, char_spacing)
+
+        return max(y_1, y_2), text1_bbox, text2_bbox, text1, text2
+
+    def generate_char_img_into_unclosed_box_with_text(self,
             np_background,
             x1, y1, x2=None, y2=None,
             char_spacing=(0.05, 0.05),
-            text=''):
+        ):
+
         if x2 is None and y2 is None:
             raise ValueError("There is one and only one None in (x2, y2).")
         if x2 is not None and y2 is not None:
             raise ValueError("There is one and only one None in (x2, y2).")
 
         # 生成白底黑字的字，包含文字
-        if text:
-            chinese_char = text[0]
+        if not self.text.empty():
+            chinese_char = self.text.get()
         else:
             chinese_char = ' '
 
-        PIL_char_img = generate_single_char(chinese_char, font)
+        PIL_char_img = draw_single_char(chinese_char, self.cur_font, self.char_size)
 
         # 随机决定是否对汉字图片进行旋转，以及旋转的角度
         if random.random() < 0.35:
-            PIL_char_img = rotate_PIL_image(PIL_char_img,
-                                            rotate_angle=random.randint(-MAX_ROTATE_ANGLE, MAX_ROTATE_ANGLE))
+            PIL_char_img = rotate_PIL_image(
+                PIL_char_img,
+                rotate_angle=random.randint(-MAX_ROTATE_ANGLE, MAX_ROTATE_ANGLE))
 
         # 转为numpy格式
         np_char_img = np.array(PIL_char_img, dtype=np.uint8)
 
-        if chinese_char in IMPORTANT_CHARS:
+        if chinese_char in IMPORTANT_CHARS or chinese_char == ' ':
             pass
         else:
             # 查找字体的最小包含矩形
@@ -376,103 +452,49 @@ class generate_text_lines_with_text_handle:
 
         return chinese_char, bounding_box, char_box_tail
 
-    def generate_one_row_chars_with_text(x, y1, y2, length, np_background, char_spacing, text=''):
-        # 记录下生成的汉字及其bounding-box
-        char_and_box_list = []
 
-        row_end = x + length - 1
-        row_height = y2 - y1 + 1
-        while length >= row_height:
-            chinese_char, bounding_box, x_tail = generate_char_img_into_unclosed_box_with_text(
-                np_background,
-                x1=x, y1=y1,
-                x2=None, y2=y2,
-                char_spacing=char_spacing,
-                text=text
-            )
-
-            char_and_box_list.append((chinese_char, bounding_box))
-            added_length = x_tail - x
-            length -= added_length
-            x = x_tail
-
-        # 获取文本行的bounding-box
-        head_x1, head_y1, _, _ = char_and_box_list[0][1]
-        _, _, tail_x2, tail_y2 = char_and_box_list[-1][1]
-        text_bbox = (head_x1, head_y1, tail_x2, tail_y2)
-
-        # 获取字符之间的划分位置
-        char_spacing_w = round(row_height * char_spacing[1])
-        split_pos = [head_x1, ]
-        for i in range(len(char_and_box_list) - 1):
-            x_cent = (char_and_box_list[i][1][2] + char_and_box_list[i + 1][1][0]) // 2
-            split_pos.append(x_cent)
-        split_pos.append(tail_x2)
-
-        return x, text_bbox, char_and_box_list, split_pos
-
-    def generate_two_rows_chars_with_text(x, y1, y2, length, np_background, char_spacing, text=''):
-        row_height = y2 - y1 + 1
-        mid_y = y1 + round(row_height / 2)
-
-        x_1, text1_bbox, _, _ = generate_one_row_chars(x, y1, mid_y, length, np_background, char_spacing, use_img)
-        x_2, text2_bbox, _, _ = generate_one_row_chars(x, mid_y + 1, y2, length, np_background, char_spacing, use_img)
-
-        # 获取文本行之间的划分位置
-        center_val = (text1_bbox[3] + text2_bbox[1]) // 2
-        char_spacing_h = round(row_height * char_spacing[0])
-        split_pos = [text1_bbox[1], center_val, text2_bbox[3]]
-
-        return max(x_1, x_2), text1_bbox, text2_bbox, split_pos
-
-    def generate_one_col_chars(x1, x2, y, length, np_background, char_spacing, text=''):
-        # 记录下生成的汉字及其bounding-box
-        char_and_box_list = []
-
-        col_end = y + length - 1
-        col_width = x2 - x1 + 1
-        while length >= col_width:
-            chinese_char, bounding_box, y_tail = generate_char_img_into_unclosed_box(
-                np_background,
-                x1=x1, y1=y,
-                x2=x2, y2=None,
-                char_spacing=char_spacing,
-                use_img=use_img
-            )
-
-            char_and_box_list.append((chinese_char, bounding_box))
-            added_length = y_tail - y
-            length -= added_length
-            y = y_tail
-
-        # 获取文本行的bounding-box
-        head_x1, head_y1, _, _ = char_and_box_list[0][1]
-        _, _, tail_x2, tail_y2 = char_and_box_list[-1][1]
-        text_bbox = (head_x1, head_y1, tail_x2, tail_y2)
-
-        # 获取字符之间的划分位置
-        char_spacing_h = round(col_width * char_spacing[0])
-        split_pos = [head_y1, ]
-        for i in range(len(char_and_box_list) - 1):
-            x_cent = (char_and_box_list[i][1][3] + char_and_box_list[i + 1][1][1]) // 2
-            split_pos.append(x_cent)
-        split_pos.append(tail_y2)
-
-        return y, text_bbox, char_and_box_list, split_pos
-
-    def generate_two_cols_chars(x1, x2, y, length, np_background, char_spacing, text=''):
-        col_width = x2 - x1 + 1
-        mid_x = x1 + round(col_width / 2)
-
-        y_1, text1_bbox, _, _ = generate_one_col_chars(x1, mid_x, y, length, np_background, char_spacing, use_img)
-        y_2, text2_bbox, _, _ = generate_one_col_chars(mid_x + 1, x2, y, length, np_background, char_spacing, use_img)
-
-        # 获取文本行之间的划分位置
-        center_val = (text1_bbox[2] + text2_bbox[0]) // 2
-        char_spacing_w = round(col_width * char_spacing[1])
-        split_pos = [text1_bbox[0], center_val, text2_bbox[2]]
-
-        return max(y_1, y_2), text1_bbox, text2_bbox, split_pos
+def draw_single_char(ch, font, canvas_size):
+    img = Image.new("L", (canvas_size * 2, canvas_size * 2), 0)
+    draw = ImageDraw.Draw(img)
+    try:
+        draw.text((10, 10), ch, 255, font=font)
+    except OSError:
+        return img
+    bbox = img.getbbox()
+    if bbox is None:
+        return img
+    l, u, r, d = bbox
+    l = max(0, l - 5)
+    u = max(0, u - 5)
+    r = min(canvas_size * 2 - 1, r + 5)
+    d = min(canvas_size * 2 - 1, d + 5)
+    if l >= r or u >= d:
+        return None
+    img = np.array(img)
+    img = img[u:d, l:r]
+    img = Image.fromarray(img)
+    # img.show()
+    width, height = img.size
+    # Convert PIL.Image to FloatTensor, scale from 0 to 1, 0 = black, 1 = white
+    try:
+        img = transforms.ToTensor()(img)
+    except SystemError:
+        return None
+    img = img.unsqueeze(0)  # 加轴
+    pad_len = int(abs(width - height) / 2)  # 预填充区域的大小
+    # 需要填充区域，如果宽大于高则上下填充，否则左右填充
+    if width > height:
+        fill_area = (0, 0, pad_len, pad_len)
+    else:
+        fill_area = (pad_len, pad_len, 0, 0)
+    # 填充像素常值
+    fill_value = 0
+    img = nn.ConstantPad2d(fill_area, fill_value)(img)
+    # img = nn.ZeroPad2d(m)(img) #直接填0
+    img = img.squeeze(0)  # 去轴
+    img = transforms.ToPILImage()(img)
+    img = img.resize((canvas_size, canvas_size), Image.ANTIALIAS)
+    return img
 
 
 # 对字体图像做等比例缩放
@@ -494,3 +516,17 @@ def resize_img_by_opencv(np_img, obj_size):
     resized_np_img = cv2.resize(np_img, dsize=(obj_width, obj_height), interpolation=interpolation)
 
     return resized_np_img
+
+
+if __name__ == '__main__':
+    with open(r'H:\bert_component\corpus\cleaned\leishu.txt', 'r', encoding='utf-8') as fp:
+        text = [line.strip() for line in fp]
+    text = [re.sub('[，。“”‘’？！《》、（）：]', '', line) for line in text]
+    text = ''.join(text)
+    handle = generate_text_lines_with_text_handle(
+        obj_num=10,
+        font_path='chinese_fonts',
+        text_type="vertical",
+        text=text
+    )
+    handle.generate_book_page_with_text()
