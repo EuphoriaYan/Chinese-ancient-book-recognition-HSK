@@ -53,6 +53,9 @@ FONT_FINISHED_DIR = os.path.join(CURR_DIR, "chinese_fonts_finished")
 
 SHUFA_FILE_DIR = os.path.join(CURR_DIR, "infer")
 
+BOOK_PAGE_SHAPE_LIST = [(740, 990), (1480, 990), (2295, 1181), (2313, 1181),
+                        (2387, 1206), (2390, 1243), (2439, 1184), (3168, 2382)]
+
 # EXTERNEL_IMAGES_DIR = os.path.join(CURR_DIR, "../ziku_images")
 EXTERNEL_IMAGES_DIR = "E:/pycharm_project/ziku_images"
 # ************************ generate image data ***************************

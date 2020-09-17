@@ -24,6 +24,7 @@ from data_generator.generate_text_lines import generate_mix_rows_chars, generate
 from config import BOOK_PAGE_IMGS_H, BOOK_PAGE_TAGS_FILE_H
 from config import BOOK_PAGE_IMGS_V, BOOK_PAGE_TAGS_FILE_V
 from config import BOOK_PAGE_TFRECORDS_H, BOOK_PAGE_TFRECORDS_V
+from config import BOOK_PAGE_SHAPE_LIST
 
 
 def generate_book_page_imgs(obj_num=10, text_type="horizontal", init_num=0, page_shape=None):
@@ -41,10 +42,14 @@ def generate_book_page_imgs(obj_num=10, text_type="horizontal", init_num=0, page
     _shape = page_shape
     with open(book_page_tags_file, "w", encoding="utf-8") as fw:
         for i in range(init_num, init_num + obj_num):
+            '''
             if page_shape is None and text_type == "h":
                 _shape = (random.randint(480, 720), random.randint(640, 960))
             if page_shape is None and text_type == "v":
                 _shape = (random.randint(640, 960), random.randint(480, 720))
+            '''
+            if page_shape is None:
+                _shape = random.choice(BOOK_PAGE_SHAPE_LIST)
 
             PIL_page, text_bbox_list, split_pos_list = create_book_page(_shape, text_type=text_type)
             image_tags = {"text_bbox_list": text_bbox_list, "split_pos_list": split_pos_list}
@@ -72,12 +77,17 @@ def generate_book_page_imgs_with_img(obj_num=10, text_type="horizontal", init_nu
     check_or_makedirs(book_page_imgs_dir)
 
     _shape = page_shape
+
     with open(book_page_tags_file, "w", encoding="utf-8") as fw:
         for i in range(init_num, init_num + obj_num):
+            '''
             if page_shape is None and text_type == "h":
                 _shape = (random.randint(480, 720), random.randint(640, 960))
             if page_shape is None and text_type == "v":
                 _shape = (random.randint(640, 960), random.randint(480, 720))
+            '''
+            if page_shape is None:
+                _shape = random.choice(BOOK_PAGE_SHAPE_LIST)
 
             PIL_page, text_bbox_list, split_pos_list = create_book_page_with_img(_shape, text_type=text_type)
             image_tags = {"text_bbox_list": text_bbox_list, "split_pos_list": split_pos_list}
@@ -463,18 +473,7 @@ def display_tfrecords(tfrecords_file):
 
 if __name__ == '__main__':
     # generate_book_page_imgs(obj_num=100, text_type="horizontal", page_shape=(416, 416))
-    root_path = '/disks/sdb/projs/AncientBooks/data/diaolong/sample_pic'
-    shape_set = set()
-    for txt_type in os.listdir(root_path):
-        for volume in os.listdir(os.path.join(root_path, txt_type)):
-            for pic_name in os.listdir(os.path.join(root_path, txt_type, volume)):
-                pic_path = os.path.join(root_path, txt_type, volume, pic_name)
-                pic = Image.open(pic_path)
-                shape_set.add(pic.size)
-    pprint(shape_set)
-    with open('data/shape_set.json', 'w', encoding='utf-8') as fp:
-        json.dump(shape_set, fp)
-    generate_book_page_imgs_with_img(obj_num=10, text_type="vertical", page_shape=(1024, 2048))
+    generate_book_page_imgs_with_img(obj_num=10, text_type="vertical")
     # generate_book_page_imgs(obj_num=5, text_type="vertical")
     # generate_book_page_tfrecords(obj_num=100, text_type="horizontal")
     # generate_book_page_tfrecords(obj_num=10000, text_type="vertical", init_num=0)
