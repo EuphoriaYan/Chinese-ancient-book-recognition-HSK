@@ -49,3 +49,6 @@ infer/
 
 # raw text
 raw_text/
+
+# output
+output/
