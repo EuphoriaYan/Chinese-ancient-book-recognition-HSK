@@ -111,7 +111,7 @@ def chkormkdir(path):
 
 class create_mix_ch_handle:
 
-    def __init__(self, bad_font_ids, experiment_dir,
+    def __init__(self, bad_font_file, experiment_dir,
                  src_fonts_dir='charset/ZhongHuaSong',
                  fonts_json='/disks/sdb/projs/AncientBooks/data/chars/font_missing.json',
                  type_fonts='type/宋黑类字符集.txt',
@@ -142,13 +142,14 @@ class create_mix_ch_handle:
             os.path.join(src_fonts_dir, 'FZSONG_ZhongHuaSongPlane15_2020051520200519101206.TTF'), char_size)
 
         self.fonts = self.get_fonts(fonts_json)
-        self.fonts2idx = {font['font_name']: idx for idx, font in enumerate(self.fonts)}
+        self.fonts2idx = {os.path.splitext(font['font_name'])[0]: idx for idx, font in enumerate(self.fonts)}
 
         with open(type_fonts, 'r', encoding='utf-8') as fp:
             self.type_fonts = {idx: font_line.strip() for idx, font_line in enumerate(fp)}
         self.type_fonts_rev = {v: k for k, v in self.type_fonts.items()}
 
-        self.bad_font_ids = bad_font_ids
+        with open(bad_font_file, 'r', encoding='utf-8') as fp:
+            self.bad_font_ids = [int(_) for _ in fp.readline().strip().split()]
         self.fake_prob = 0.05
 
         checkpoint_dir = os.path.join(experiment_dir, "checkpoint")
@@ -167,11 +168,6 @@ class create_mix_ch_handle:
         self.model.print_networks(True)
         self.model.load_networks(resume)
 
-    def get_fonts2idx(self, dst_fonts):
-        for idx, font in enumerate(dst_fonts):
-
-
-
     def get_fonts(self, fonts_json):
         dst_json = fonts_json
         with open(dst_json, 'r', encoding='utf-8') as fp:
@@ -181,10 +177,11 @@ class create_mix_ch_handle:
     def set_cur_font(self):
         self.idx = random.choice(self.type_fonts.keys())
         cur_font_name = self.type_fonts[self.idx]
+        raw_idx = self.fonts2idx[cur_font_name]
 
-        cur_font = self.fonts[idx]
+        cur_font = self.fonts[raw_idx]
         self.font_name = cur_font['font_name']
-        print(self.font_name + ': ' + str(idx), flush=True)
+        print(self.font_name + ': ' + str(self.idx) + ' , raw_idx: ' + str(raw_idx), flush=True)
 
         font_path = cur_font['font_pth']
         self.font_missing = set(cur_font['missing'])
@@ -230,54 +227,3 @@ class create_mix_ch_handle:
             else:
                 img = self.get_fake_single_char(ch)
                 return img, False
-
-
-if __name__ == "__main__":
-
-
-    fonts = get_fonts()
-    bad_font_ids = get_bad_fontlist()
-    print('bad font ids:')
-    print(bad_font_ids)
-    mix_ch_handle = create_mix_ch_handle(fonts, bad_font_ids)
-    sys.stdout.flush()
-
-    charset = get_charset()
-    print('load charset, %d chars in total' % len(charset), flush=True)
-    for ch in charset:
-        '''
-        if ch not in mix_ch_handle.charSetTotal:
-            print('char %c is strange and will not be included.' % ch)
-            print('encoding %s' % ch.encode('utf-8'))
-        else:
-            chkormkdir(os.path.join(args.sample_dir, ch))
-        '''
-        chkormkdir(os.path.join(args.sample_dir, ch))
-
-    # Get start_num, font_cnt
-    if args.create_num == 0:
-        start_num = 0
-        font_cnt = 201
-    else:
-        start_num = 200 * args.create_num + 1
-        if args.create_num == 4:
-            font_cnt = 165
-        else:
-            font_cnt = 200
-    end_num = start_num + font_cnt
-    if args.start_from is not None:
-        start_num = args.start_from
-
-    for idx in range(start_num, end_num):
-        mix_ch_handle.set_cur_font(idx)
-        font_name = mix_ch_handle.font_name
-        for ch in charset:
-            save_path = os.path.join(args.sample_dir, ch)
-            img, flag = mix_ch_handle.get_mix_character(ch)
-            if img is None:
-                continue
-            else:
-                if flag:
-                    img.save(os.path.join(save_path, font_name + '_' + ch + '.png'))
-                else:
-                    img.save(os.path.join(save_path, font_name + '_' + ch + '_from_font_magic.png'))

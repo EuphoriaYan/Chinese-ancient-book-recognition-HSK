@@ -32,6 +32,7 @@ from data_generator.img_utils import find_min_bound_box
 from data_generator.img_utils import adjust_img_and_put_into_background
 from data_generator.img_utils import reverse_image_color
 from noise_util import add_noise
+from generate_font_sample import create_mix_ch_handle
 
 
 def check_text_type(text_type):
@@ -45,7 +46,7 @@ def check_text_type(text_type):
 
 
 class generate_text_lines_with_text_handle:
-    def __init__(self, obj_num, font_path, shape=None, text_type="horizontal",
+    def __init__(self, obj_num, shape=None, text_type="horizontal",
                  text='野火烧不尽春风吹又生', char_size=64, augment=True):
         self.text = Queue()
         for char in text:
@@ -56,18 +57,17 @@ class generate_text_lines_with_text_handle:
         elif isinstance(shape, tuple) and len(shape) == 2:
             self.shape = shape
         else:
-            raise ValueError('shape should be tuple and length 2')
+            raise ValueError('shape should be tuple and have length 2')
         self.obj_num = obj_num
-        self.font_path = []
-        for file in os.listdir(font_path):
-            ext = os.path.splitext(file)[-1].lower()
-            if ext in ['.ttf', '.otf', '.ttc', '.fon']:
-                self.font_path.append(os.path.join(font_path, file))
-        if not len(self.font_path):
-            raise ValueError('Find 0 font file in {}'.format(font_path))
-        self.cur_font = None
         self.char_size = char_size
         self.augment = augment
+        self.generate_font_handle = create_mix_ch_handle(
+            bad_font_file='charset/songhei_error_font.txt',
+            experiment_dir='songhei_experiment/',
+            type_fonts='type/宋黑类字符集.txt',
+            embedding_num=250,
+            resume=70000
+        )
 
     def generate_book_page_with_text(self, init_num=0):
         text_type = check_text_type(self.text_type)
@@ -89,8 +89,7 @@ class generate_text_lines_with_text_handle:
                 else:
                     shape = self.shape
 
-                font = random.choice(self.font_path)
-                self.cur_font = ImageFont.truetype(font, size=self.char_size)
+                self.generate_font_handle.set_cur_font()
 
                 PIL_page, text_bbox_list, text_list = self.create_book_page_with_text(
                     shape,
@@ -294,7 +293,7 @@ class generate_text_lines_with_text_handle:
 
         return y, text_bbox_list, text_list
 
-    def generate_one_row_chars_with_text(self, x, y1, y2, length, np_background, char_spacing, text=''):
+    def generate_one_row_chars_with_text(self, x, y1, y2, length, np_background, char_spacing):
         """
         :return: x, text_bbox, text
         """
@@ -324,7 +323,7 @@ class generate_text_lines_with_text_handle:
 
         return x, text_bbox, text
 
-    def generate_two_rows_chars_with_text(self, x, y1, y2, length, np_background, char_spacing, text=''):
+    def generate_two_rows_chars_with_text(self, x, y1, y2, length, np_background, char_spacing):
         row_height = y2 - y1 + 1
         mid_y = y1 + round(row_height / 2)
 
@@ -385,13 +384,17 @@ class generate_text_lines_with_text_handle:
         if x2 is not None and y2 is not None:
             raise ValueError("There is one and only one None in (x2, y2).")
 
-        # 生成白底黑字的字，包含文字
-        if not self.text.empty():
-            chinese_char = self.text.get()
-        else:
-            chinese_char = ' '
+        chinese_char = ' '
+        PIL_char_img = None
+        while PIL_char_img is None:
+            # 生成白底黑字的字，包含文字
+            if not self.text.empty():
+                chinese_char = self.text.get()
+            else:
+                chinese_char = ' '
+            PIL_char_img, flag = self.generate_font_handle.get_mix_character(chinese_char)
 
-        PIL_char_img = draw_single_char(chinese_char, self.cur_font, self.char_size)
+        PIL_char_img = PIL_char_img.resize((self.char_size, self.char_size))
 
         # 随机决定是否对汉字图片进行旋转，以及旋转的角度
         if random.random() < 0.35:
@@ -479,7 +482,7 @@ class generate_text_lines_with_text_handle:
         return chinese_char, bounding_box, char_box_tail
 
 
-def draw_single_char(ch, font, canvas_size):
+'''def draw_single_char(ch, font, canvas_size):
     img = Image.new("L", (canvas_size * 2, canvas_size * 2), 0)
     draw = ImageDraw.Draw(img)
     try:
@@ -521,7 +524,7 @@ def draw_single_char(ch, font, canvas_size):
     img = transforms.ToPILImage()(img)
     img = img.resize((canvas_size, canvas_size), Image.ANTIALIAS)
     return img
-
+'''
 
 # 对字体图像做等比例缩放
 def resize_img_by_opencv(np_img, obj_size):
@@ -555,7 +558,6 @@ if __name__ == '__main__':
     text = ''.join(text)
     handle = generate_text_lines_with_text_handle(
         obj_num=10,
-        font_path='chinese_fonts',
         text_type="vertical",
         text=text
     )
