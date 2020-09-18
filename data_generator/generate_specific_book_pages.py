@@ -562,7 +562,7 @@ if __name__ == '__main__':
 
     text = ''.join(text)
     handle = generate_text_lines_with_text_handle(
-        obj_num=10,
+        obj_num=500,
         text_type="vertical",
         text=text,
         char_size=64,
