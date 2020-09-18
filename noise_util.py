@@ -30,7 +30,7 @@ def add_noise(img, generate_ratio=0.003, generate_size=0.008):
             for j in range(P_noise_y - R, P_noise_y + R):
                 if cal_dis((i, j), (P_noise_x, P_noise_y)) < R:
                     if random.random() < 0.8:
-                        img[j][i] = 0 if random.random() < 0.5 else 255
+                        img[j][i] = random.randint(0, 255)
         cnt += 2 * R
         if cnt >= threshold:
             break
@@ -47,7 +47,7 @@ def add_noise(img, generate_ratio=0.003, generate_size=0.008):
         for i in range(P_noise_x + 1, P_noise_x + R):
             for j in range(P_noise_y + 1, P_noise_y + R):
                 if random.random() < 0.8:
-                    img[j][i] = 0 if random.random() < 0.5 else 255
+                    img[j][i] = random.randint(0, 255)
         cnt += R
         if cnt >= threshold:
             break
