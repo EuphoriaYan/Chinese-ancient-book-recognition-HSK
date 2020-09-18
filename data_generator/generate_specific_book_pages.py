@@ -47,7 +47,9 @@ def check_text_type(text_type):
 
 class generate_text_lines_with_text_handle:
     def __init__(self, obj_num, shape=None, text_type="horizontal",
-                 text='野火烧不尽春风吹又生', char_size=64, augment=True):
+                 text='野火烧不尽春风吹又生', char_size=64, augment=True,
+                 bad_font_file='charset/songhei_error_font.txt', experiment_dir='songhei_experiment/',
+                 embedding_num=250, resume=70000):
         self.text = Queue()
         for char in text:
             self.text.put(char)
@@ -62,11 +64,11 @@ class generate_text_lines_with_text_handle:
         self.char_size = char_size
         self.augment = augment
         self.generate_font_handle = create_mix_ch_handle(
-            bad_font_file='charset/songhei_error_font.txt',
-            experiment_dir='songhei_experiment/',
+            bad_font_file=bad_font_file,
+            experiment_dir=experiment_dir,
             type_fonts='type/宋黑类字符集.txt',
-            embedding_num=250,
-            resume=70000
+            embedding_num=embedding_num,
+            resume=resume
         )
 
     def generate_book_page_with_text(self, init_num=0):
@@ -548,7 +550,7 @@ def resize_img_by_opencv(np_img, obj_size):
 
 
 if __name__ == '__main__':
-    #with open(r'H:\bert_component\corpus\cleaned\leishu.txt', 'r', encoding='utf-8') as fp:
+    #with open(r'..\corpus\cleaned\leishu.txt', 'r', encoding='utf-8') as fp:
     #    text = [line.strip() for line in fp]
     #    text = [re.sub('[，。“”‘’？！《》、（）:：；;·［］【】〈〉]', '', line) for line in text]
     #    text = list(filter(None, text))
