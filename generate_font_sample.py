@@ -175,7 +175,7 @@ class create_mix_ch_handle:
         return dst_fonts
 
     def set_cur_font(self):
-        self.idx = random.choice(self.type_fonts.keys())
+        self.idx = random.choice(list(self.type_fonts.keys()))
         cur_font_name = self.type_fonts[self.idx]
         raw_idx = self.fonts2idx[cur_font_name]
 
