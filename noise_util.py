@@ -1,9 +1,10 @@
 
-from PIL import Image
+from PIL import Image, ImageDraw
 import numpy as np
 from tqdm import tqdm
 import random
 import math
+import json
 
 
 def cal_dis(pA, pB):
@@ -56,6 +57,13 @@ def add_noise(img, generate_ratio=0.003, generate_size=0.004):
 
 
 if __name__ == '__main__':
-    img = Image.open('data/book_pages/imgs_vertical/book_page_1.jpg')
-    img = add_noise(img)
-    img.show()
+    img = Image.open('data/book_pages/imgs_vertical/book_page_0.jpg').convert('RGB')
+    draw = ImageDraw.Draw(img)
+    with open('data/book_pages/book_pages_tags_vertical_3.txt', 'r', encoding='utf-8') as fp:
+        line = fp.readline().strip()
+    json_str = line.split('\t')[-1]
+    data = json.loads(json_str)
+    for text_bbox, text in zip(data['text_bbox_list'], data['text_list']):
+        print(text)
+        draw.rectangle(text_bbox, outline=(255, 0, 0), width=5)
+        img.show()

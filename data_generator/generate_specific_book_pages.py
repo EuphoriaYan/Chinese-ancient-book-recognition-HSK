@@ -31,6 +31,7 @@ from data_generator.img_utils import rotate_PIL_image
 from data_generator.img_utils import find_min_bound_box
 from data_generator.img_utils import adjust_img_and_put_into_background
 from data_generator.img_utils import reverse_image_color
+from noise_util import add_noise
 
 
 def check_text_type(text_type):
@@ -44,7 +45,8 @@ def check_text_type(text_type):
 
 
 class generate_text_lines_with_text_handle:
-    def __init__(self, obj_num, font_path, shape=None, text_type="horizontal", text='野火烧不尽春风吹又生', char_size=64):
+    def __init__(self, obj_num, font_path, shape=None, text_type="horizontal",
+                 text='野火烧不尽春风吹又生', char_size=64, augment=True):
         self.text = Queue()
         for char in text:
             self.text.put(char)
@@ -65,6 +67,7 @@ class generate_text_lines_with_text_handle:
             raise ValueError('Find 0 font file in {}'.format(font_path))
         self.cur_font = None
         self.char_size = char_size
+        self.augment = augment
 
     def generate_book_page_with_text(self, init_num=0):
         text_type = check_text_type(self.text_type)
@@ -93,6 +96,27 @@ class generate_text_lines_with_text_handle:
                     shape,
                     text_type=text_type
                 )
+
+                if self.augment:
+                    new_text_bbox_list = []
+                    if random.random() > 0.5:
+                        w, h = PIL_page.size
+                        resize_ratio_range = 1.2
+                        resize_ratio = random.uniform(np.log(1/resize_ratio_range), np.log(resize_ratio_range))
+                        resize_ratio = np.exp(resize_ratio)
+                        new_w = int(w / resize_ratio)
+                        new_h = int(h * resize_ratio)
+                        PIL_page = PIL_page.resize((new_w, new_h))
+                        for text_bbox in text_bbox_list:
+                            new_text_bbox = (
+                                int(text_bbox[0] / resize_ratio),
+                                int(text_bbox[1] * resize_ratio),
+                                int(text_bbox[2] / resize_ratio),
+                                int(text_bbox[3] * resize_ratio),
+                            )
+                            new_text_bbox_list.append(new_text_bbox)
+                        text_bbox_list = new_text_bbox_list
+                    PIL_page = add_noise(PIL_page)
 
                 image_tags = {"text_bbox_list": text_bbox_list, "text_list": text_list}
 
@@ -257,7 +281,6 @@ class generate_text_lines_with_text_handle:
                 y, text1_bbox, text2_bbox, text1, text2 = self.generate_two_cols_chars_with_text(
                     x1, x2, y, length, np_background, char_spacing
                 )
-                text_bbox_list.extend([text1_bbox, text2_bbox])
                 text_bbox_list.append(text1_bbox)
                 text_list.append(text1)
                 text_bbox_list.append(text2_bbox)
