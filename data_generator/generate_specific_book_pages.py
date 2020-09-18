@@ -48,7 +48,9 @@ def check_text_type(text_type):
 class generate_text_lines_with_text_handle:
     def __init__(self, obj_num, shape=None, text_type="horizontal",
                  text='野火烧不尽春风吹又生', char_size=64, augment=True,
-                 bad_font_file='charset/songhei_error_font.txt', experiment_dir='songhei_experiment/',
+                 bad_font_file='charset/songhei_error_font.txt',
+                 experiment_dir='songhei_experiment/',
+                 type_fonts='type/宋黑类字符集.txt',
                  embedding_num=250, resume=70000):
         self.text = Queue()
         for char in text:
@@ -66,7 +68,7 @@ class generate_text_lines_with_text_handle:
         self.generate_font_handle = create_mix_ch_handle(
             bad_font_file=bad_font_file,
             experiment_dir=experiment_dir,
-            type_fonts='type/宋黑类字符集.txt',
+            type_fonts=type_fonts,
             embedding_num=embedding_num,
             resume=resume
         )
@@ -561,6 +563,13 @@ if __name__ == '__main__':
     handle = generate_text_lines_with_text_handle(
         obj_num=10,
         text_type="vertical",
-        text=text
+        text=text,
+        char_size=64,
+        augment=True,
+        bad_font_file='charset/songhei_error_font.txt',
+        experiment_dir='songhei_experiment/',
+        type_fonts='type/宋黑类字符集.txt',
+        embedding_num=250,
+        resume=70000
     )
     handle.generate_book_page_with_text()
