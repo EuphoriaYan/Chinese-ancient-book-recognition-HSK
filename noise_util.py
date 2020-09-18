@@ -11,7 +11,7 @@ def cal_dis(pA, pB):
     return math.sqrt((pA[0] - pB[0])**2 + (pA[1] - pB[1])**2)
 
 
-def add_noise(img, generate_ratio=0.003, generate_size=0.008):
+def add_noise(img, generate_ratio=0.003, generate_size=0.006):
     if not isinstance(img, np.ndarray):
         img = np.array(img)
     h, w = img.shape
