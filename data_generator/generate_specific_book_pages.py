@@ -51,7 +51,8 @@ class generate_text_lines_with_text_handle:
                  bad_font_file='charset/songhei_error_font.txt',
                  experiment_dir='songhei_experiment/',
                  type_fonts='type/宋黑类字符集.txt',
-                 embedding_num=250, resume=70000):
+                 embedding_num=250, resume=70000,
+                 init_num=0):
         self.text = Queue()
         for char in text:
             self.text.put(char)
@@ -72,8 +73,9 @@ class generate_text_lines_with_text_handle:
             embedding_num=embedding_num,
             resume=resume
         )
+        self.init_num = init_num
 
-    def generate_book_page_with_text(self, init_num=0):
+    def generate_book_page_with_text(self):
         text_type = check_text_type(self.text_type)
 
         if text_type == "h":
@@ -84,10 +86,9 @@ class generate_text_lines_with_text_handle:
             raise ValueError('text_type should be horizontal or vertical')
 
         check_or_makedirs(book_page_imgs_dir)
-        obj_num = self.obj_num
 
         with open(book_page_tags_file, "w", encoding="utf-8") as fw:
-            for i in range(init_num, init_num + obj_num):
+            for i in range(self.init_num, self.init_num + self.obj_num):
                 if isinstance(self.shape, list):
                     shape = random.choice(self.shape)
                 else:
@@ -130,7 +131,7 @@ class generate_text_lines_with_text_handle:
                 fw.write(img_name + "\t" + json.dumps(image_tags) + "\n")
 
                 if i % 50 == 0:
-                    print(" %d / %d Done" % (i, obj_num))
+                    print(" %d / %d Done" % (i, self.obj_num))
                     sys.stdout.flush()
 
     def create_book_page_with_text(self, shape, text_type):
@@ -570,6 +571,7 @@ if __name__ == '__main__':
         experiment_dir='songhei_experiment/',
         type_fonts='type/宋黑类字符集.txt',
         embedding_num=250,
-        resume=70000
+        resume=70000,
+        init_num=0
     )
     handle.generate_book_page_with_text()
