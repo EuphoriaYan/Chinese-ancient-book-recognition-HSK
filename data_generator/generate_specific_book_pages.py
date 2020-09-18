@@ -106,7 +106,7 @@ class generate_text_lines_with_text_handle:
                     if random.random() > 0.5:
                         w, h = PIL_page.size
                         # resize_ratio_range = (0.8, 1.3)
-                        resize_ratio_range = 1.2
+                        resize_ratio_range = 1.15
                         resize_ratio = random.uniform(1, resize_ratio_range)
                         # resize_ratio = np.exp(resize_ratio)
                         new_w = int(w / resize_ratio)
