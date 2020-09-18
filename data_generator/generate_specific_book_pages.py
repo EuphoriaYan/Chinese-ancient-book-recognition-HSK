@@ -101,9 +101,10 @@ class generate_text_lines_with_text_handle:
                     new_text_bbox_list = []
                     if random.random() > 0.5:
                         w, h = PIL_page.size
+                        # resize_ratio_range = (0.8, 1.3)
                         resize_ratio_range = 1.2
-                        resize_ratio = random.uniform(np.log(1/resize_ratio_range), np.log(resize_ratio_range))
-                        resize_ratio = np.exp(resize_ratio)
+                        resize_ratio = random.uniform(1, resize_ratio_range)
+                        # resize_ratio = np.exp(resize_ratio)
                         new_w = int(w / resize_ratio)
                         new_h = int(h * resize_ratio)
                         PIL_page = PIL_page.resize((new_w, new_h))
@@ -268,16 +269,18 @@ class generate_text_lines_with_text_handle:
         flag = 0 if random.random() < 0.6 else 1  # 以单行字串还是双行字串开始
         remaining_len = col_length
         while remaining_len >= col_width:
-            # 随机决定接下来的字串长度（这是大约数值，实际可能比它小,也可能比它大）
-            length = random.randint(col_width, remaining_len)
             flag += 1
             if flag % 2 == 1:
+                # 随机决定接下来的字串长度（这是大约数值，实际可能比它小,也可能比它大）
+                length = random.randint(col_width, min(remaining_len, col_width * 20))
                 y, text_bbox, text = self.generate_one_col_chars_with_text(
                     x1, x2, y, length, np_background, char_spacing
                 )
                 text_bbox_list.append(text_bbox)
                 text_list.append(text)
             else:
+                # 随机决定接下来的字串长度（这是大约数值，实际可能比它小,也可能比它大）
+                length = random.randint(col_width, min(remaining_len, col_width * 10))
                 y, text1_bbox, text2_bbox, text1, text2 = self.generate_two_cols_chars_with_text(
                     x1, x2, y, length, np_background, char_spacing
                 )
@@ -542,9 +545,13 @@ def resize_img_by_opencv(np_img, obj_size):
 
 
 if __name__ == '__main__':
-    with open(r'H:\bert_component\corpus\cleaned\leishu.txt', 'r', encoding='utf-8') as fp:
+    #with open(r'H:\bert_component\corpus\cleaned\leishu.txt', 'r', encoding='utf-8') as fp:
+    #    text = [line.strip() for line in fp]
+    #    text = [re.sub('[，。“”‘’？！《》、（）:：；;·［］【】〈〉]', '', line) for line in text]
+    #    text = list(filter(None, text))
+    with open('raw_text/leishu.txt', 'r', encoding='utf-8') as fp:
         text = [line.strip() for line in fp]
-    text = [re.sub('[，。“”‘’？！《》、（）：]', '', line) for line in text]
+
     text = ''.join(text)
     handle = generate_text_lines_with_text_handle(
         obj_num=10,

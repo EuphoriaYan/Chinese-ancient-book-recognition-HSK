@@ -46,3 +46,6 @@ chinese_components/UCS_strokes.txt
 
 # Shufa imgs
 infer/
+
+# raw text
+raw_text/

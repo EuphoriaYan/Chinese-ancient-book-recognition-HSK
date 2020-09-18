@@ -65,5 +65,5 @@ if __name__ == '__main__':
     data = json.loads(json_str)
     for text_bbox, text in zip(data['text_bbox_list'], data['text_list']):
         print(text)
-        draw.rectangle(text_bbox, outline=(255, 0, 0), width=5)
+        draw.rectangle(text_bbox, outline=(255, 0, 0))
         img.show()
