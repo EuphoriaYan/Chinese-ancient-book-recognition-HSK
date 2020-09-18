@@ -221,11 +221,13 @@ class create_mix_ch_handle:
         if ch in self.dst_font_chars and ch not in self.font_fake:
             if self.idx in self.bad_font_ids or random.random() > self.fake_prob:
                 img = draw_single_char(ch, self.dst_font, self.canvas_size)
-                img = self.reverse_color(img)
+                if img is not None:
+                    img = self.reverse_color(img)
                 return img, True
             else:
                 img = self.get_fake_single_char(ch)
-                img = self.reverse_color(img)
+                if img is not None:
+                    img = self.reverse_color(img)
                 return img, False
         # can't draw this ch
         else:
@@ -234,5 +236,6 @@ class create_mix_ch_handle:
                 return None, True
             else:
                 img = self.get_fake_single_char(ch)
-                img = self.reverse_color(img)
+                if img is not None:
+                    img = self.reverse_color(img)
                 return img, False
