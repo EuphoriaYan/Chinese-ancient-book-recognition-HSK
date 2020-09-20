@@ -4,6 +4,8 @@
 import os
 import sys
 
+import ocrodeg
+
 root_path = "/".join(os.path.realpath(__file__).split("/")[:-2])
 if root_path not in sys.path:
     sys.path.insert(0, root_path)
@@ -107,7 +109,7 @@ class generate_text_lines_with_text_handle:
                     if random.random() > 0.5:
                         w, h = PIL_page.size
                         # resize_ratio_range = (0.8, 1.3)
-                        resize_ratio_range = 1.15
+                        resize_ratio_range = 1.11
                         resize_ratio = random.uniform(1, resize_ratio_range)
                         # resize_ratio = np.exp(resize_ratio)
                         new_w = int(w / resize_ratio)
@@ -123,6 +125,7 @@ class generate_text_lines_with_text_handle:
                             new_text_bbox_list.append(new_text_bbox)
                         text_bbox_list = new_text_bbox_list
                     PIL_page = add_noise(PIL_page)
+                    PIL_page = ocrodeg.augment(PIL_page)
 
                 image_tags = {"text_bbox_list": text_bbox_list, "text_list": text_list}
 
@@ -197,7 +200,7 @@ class generate_text_lines_with_text_handle:
             # cols_num = random.randint(6, 10)
             # cols_num = random.randint(18, 23)
             # cols_num = random.randint(14, 19)
-            cols_num = random.randint(16, 20)
+            cols_num = random.randint(int(page_width / page_height * 8), int(page_width / page_height * 13))
             col_w = (page_width - 2 * margin_w) / cols_num
 
             # x-coordinate划分列

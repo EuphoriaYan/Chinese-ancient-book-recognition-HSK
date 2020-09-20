@@ -250,48 +250,49 @@ def test():
     img.show()
 
 
-def augment():
-
-    root_path = 'data/book_pages/imgs_vertical/'
-    for jpg_file in tqdm(os.listdir('data/book_pages/imgs_vertical/')):
-        jpg_file = os.path.join(root_path, jpg_file)
-        img = np.array(Image.open(jpg_file))
-
-        # 50% use distort, 50% use raw
-        if random.random() < 0.5:
-            img = distort_with_noise(
-                img,
-                deltas=bounded_gaussian_noise(
-                    shape=img.shape,
-                    sigma=random.uniform(12.0, 20.0),
-                    maxdelta=random.uniform(3.0, 5.0)
-                )
+def augment(img):
+    img = np.array(img)
+    # 50% use distort, 50% use raw
+    flag = 0
+    if random.random() < 0.5:
+        img = distort_with_noise(
+            img,
+            deltas=bounded_gaussian_noise(
+                shape=img.shape,
+                sigma=random.uniform(12.0, 20.0),
+                maxdelta=random.uniform(3.0, 5.0)
             )
+        )
+        flag += 1
 
-        img = img / 255
+    img = img / 255
 
-        # 50% use binary blur, 50% use raw
-        if random.random() < 0.5:
-            img = binary_blur(
-                img,
-                sigma=random.uniform(0.5, 0.7),
-                noise=random.uniform(0.05, 0.1)
-            )
+    # 50% use binary blur, 50% use raw
+    if random.random() < 0.5:
+        img = binary_blur(
+            img,
+            sigma=random.uniform(0.5, 0.7),
+            noise=random.uniform(0.05, 0.1)
+        )
+        flag += 1
 
-        img = np.clip(img, 0.0, 1.0)
+    img = np.clip(img, 0.0, 1.0)
 
-        # 40% use multiscale, 40% use fibrous, 20% use raw
-        rnd = random.random()
-        if rnd < 0.4:
-            img = printlike_multiscale(img, blur=0.5)
-        elif rnd < 0.8:
-            img = printlike_fibrous(img)
+    # raw - 50% use multiscale, 50% use fibrous, 0% use raw
+    # flag=1 - 35% use multiscale, 35% use fibrous, 30% use raw
+    # flag=2 - 20% use multiscale, 20% use fibrous, 60% use raw
+    rnd = random.random()
+    if rnd < 0.5 - flag * 0.15:
+        img = printlike_multiscale(img, blur=0.5)
+    elif rnd < 1 - flag * 0.15:
+        img = printlike_fibrous(img)
 
-        img = (img * 255).astype(np.uint8)
-        img = Image.fromarray(img)
-        img.save(jpg_file)
+    img = (img * 255).astype(np.uint8)
+    img = Image.fromarray(img)
+    return img
 
 
 if __name__ == '__main__':
     # test()
-    augment()
+    # augment()
+    pass
