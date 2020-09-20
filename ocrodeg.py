@@ -93,7 +93,7 @@ def noise_distort1d(shape, sigma=100.0, magnitude=100.0):
 
 def percent_black(image):
     n = np.prod(image.shape)
-    k = sum(image < 0.5)
+    k = np.sum(image < 0.5)
     return k * 100.0 / n
 
 
@@ -238,24 +238,24 @@ def printlike_fibrous(image, blur=0.5, blotches=5e-5, paper_range=(0.8, 1.0), in
     return printed
 
 
-if __name__ == '__main__':
+def test():
 
-    # img = imageio.imread('data/book_pages/imgs_vertical/book_page_0.jpg')
+    img = np.array(Image.open('data/book_pages/imgs_vertical/book_page_0.jpg'))
     # img = distort_with_noise(img, bounded_gaussian_noise(img.shape, 15.0, 5.0))
     # img = ndi.gaussian_filter(img, 0.5)
-    # img = (binary_blur(img / 255, 0.7, noise=0.2) * 255).astype(np.uint8)
+    img = (binary_blur(img / 255, 0.7, noise=0.1) * 255).astype(np.uint8)
     # img = (printlike_fibrous(img / 255) * 255).astype(np.uint8)
     # img = (printlike_multiscale(img / 255, blur=0.5) * 255).astype(np.uint8)
-    # img = Image.fromarray(img)
-    # img.show()
+    img = Image.fromarray(img)
+    img.show()
+
+
+def augment():
 
     root_path = 'data/book_pages/imgs_vertical/'
     for jpg_file in tqdm(os.listdir('data/book_pages/imgs_vertical/')):
         jpg_file = os.path.join(root_path, jpg_file)
         img = np.array(Image.open(jpg_file))
-
-        img = img / 255
-        flag = 0
 
         # 50% use distort, 50% use raw
         if random.random() < 0.5:
@@ -264,10 +264,11 @@ if __name__ == '__main__':
                 deltas=bounded_gaussian_noise(
                     shape=img.shape,
                     sigma=random.uniform(12.0, 20.0),
-                    maxdelta=random.uniform(3.0, 7.0)
+                    maxdelta=random.uniform(3.0, 5.0)
                 )
             )
-            flag += 1
+
+        img = img / 255
 
         # 50% use binary blur, 50% use raw
         if random.random() < 0.5:
@@ -276,7 +277,6 @@ if __name__ == '__main__':
                 sigma=random.uniform(0.5, 0.7),
                 noise=random.uniform(0.05, 0.1)
             )
-            flag += 1
 
         img = np.clip(img, 0.0, 1.0)
 
@@ -290,3 +290,8 @@ if __name__ == '__main__':
         img = (img * 255).astype(np.uint8)
         img = Image.fromarray(img)
         img.save(jpg_file)
+
+
+if __name__ == '__main__':
+    # test()
+    augment()
