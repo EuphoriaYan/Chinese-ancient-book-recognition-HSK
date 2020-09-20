@@ -250,7 +250,7 @@ def test():
     img.show()
 
 
-def augment(img):
+def ocrodeg_augment(img):
     img = np.array(img)
     # 50% use distort, 50% use raw
     flag = 0

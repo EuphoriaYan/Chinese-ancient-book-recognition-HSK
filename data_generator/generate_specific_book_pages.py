@@ -4,8 +4,6 @@
 import os
 import sys
 
-import ocrodeg
-
 root_path = "/".join(os.path.realpath(__file__).split("/")[:-2])
 if root_path not in sys.path:
     sys.path.insert(0, root_path)
@@ -125,7 +123,7 @@ class generate_text_lines_with_text_handle:
                             new_text_bbox_list.append(new_text_bbox)
                         text_bbox_list = new_text_bbox_list
                     PIL_page = add_noise(PIL_page)
-                    PIL_page = ocrodeg.augment(PIL_page)
+                    PIL_page = ocrodeg_augment(PIL_page)
 
                 image_tags = {"text_bbox_list": text_bbox_list, "text_list": text_list}
 
