@@ -4,6 +4,9 @@ import warnings
 import numpy as np
 import pylab
 import scipy.ndimage as ndi
+from PIL import Image
+import imageio
+from matplotlib.pyplot import imshow
 from numpy import *
 
 
@@ -225,3 +228,18 @@ def printlike_fibrous(image, blur=1.0, blotches=5e-5):
     blurred = ndi.gaussian_filter(selector, blur)
     printed = blurred * ink + (1 - blurred) * paper
     return printed
+
+
+if __name__ == '__main__':
+    img = np.array(Image.open('data/book_pages/imgs_vertical/book_page_0.jpg'))
+    # img = imageio.imread('data/book_pages/imgs_vertical/book_page_0.jpg', format=)
+
+    # img = transform_image(img, **random_transform())
+    # img = distort_with_noise(img, bounded_gaussian_noise(img.shape, 15.0, 5.0))
+    # img = ndi.gaussian_filter(img, 0.5)
+    # img = (binary_blur(img / 255, 0.7, noise=0.2) * 255).astype(np.uint8)
+    img = (printlike_fibrous(img / 255) * 255).astype(np.uint8)
+    # img = (printlike_multiscale(img / 255) * 255).astype(np.uint8)
+
+    img = Image.fromarray(img)
+    img.show()

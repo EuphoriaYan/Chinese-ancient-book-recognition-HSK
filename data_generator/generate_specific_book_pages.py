@@ -32,6 +32,7 @@ from data_generator.img_utils import find_min_bound_box
 from data_generator.img_utils import adjust_img_and_put_into_background
 from data_generator.img_utils import reverse_image_color
 from noise_util import add_noise
+from ocrodeg import *
 from generate_font_sample import create_mix_ch_handle
 
 
