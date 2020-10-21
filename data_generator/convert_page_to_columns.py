@@ -25,7 +25,7 @@ def convert_page_to_columns(input_dir, train_output_dir, val_output_dir):
             for i, (bbox, text) in enumerate(zip(bbox_list, text_list)):
                 crop_img = img.crop(bbox)
                 save_dir = os.path.join('imgs', base_name + '_' + str(i) + ext)
-                if random() > 0.995:
+                if random() < 0.995:
                     crop_img.save(os.path.join(train_output_dir, save_dir))
                     train_gt_file.write(save_dir + '\t' + ''.join(text) + '\n')
                 else:
