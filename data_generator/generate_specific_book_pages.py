@@ -97,13 +97,14 @@ class generate_text_lines_with_text_handle:
 
                 self.generate_font_handle.set_cur_font()
 
-                PIL_page, text_bbox_list, text_list = self.create_book_page_with_text(
+                PIL_page, text_bbox_list, text_list, char_bbox_list, char_list = self.create_book_page_with_text(
                     shape,
                     text_type=text_type
                 )
 
                 if self.augment:
                     new_text_bbox_list = []
+                    new_char_bbox_list = []
                     if random.random() > 0.5:
                         w, h = PIL_page.size
                         # resize_ratio_range = (0.8, 1.3)
@@ -121,11 +122,21 @@ class generate_text_lines_with_text_handle:
                                 int(text_bbox[3] * resize_ratio),
                             )
                             new_text_bbox_list.append(new_text_bbox)
+                        for char_bbox in char_bbox_list:
+                            new_char_bbox = (
+                                int(char_bbox[0] / resize_ratio),
+                                int(char_bbox[1] * resize_ratio),
+                                int(char_bbox[2] / resize_ratio),
+                                int(char_bbox[3] * resize_ratio),
+                            )
+                            new_char_bbox_list.append(new_char_bbox)
                         text_bbox_list = new_text_bbox_list
+                        char_bbox_list = new_char_bbox_list
                     PIL_page = add_noise(PIL_page)
                     PIL_page = ocrodeg_augment(PIL_page)
 
-                image_tags = {"text_bbox_list": text_bbox_list, "text_list": text_list}
+                image_tags = {"text_bbox_list": text_bbox_list, "text_list": text_list,
+                              "char_bbox_list": char_bbox_list, "char_list": char_list}
 
                 img_name = "book_page_%d.jpg" % i
                 save_path = os.path.join(book_page_imgs_dir, img_name)
@@ -163,6 +174,10 @@ class generate_text_lines_with_text_handle:
         text_bbox_records_list = []
         text_records_list = []
 
+        # 记录下单字的boundding-box
+        char_bbox_records_list = []
+        char_records_list = []
+
         if text_type == "h":  # 横向排列
 
             # 随机确定文本的行数
@@ -186,11 +201,13 @@ class generate_text_lines_with_text_handle:
                 y1, y2 = ys[i] + 1, ys[i + 1] - 1
                 x = margin_w + int(random.uniform(0.0, 1) * margin_line_thickness)
                 row_length = page_width - x - margin_w
-                _, text_bbox_list, text_list = self.generate_mix_rows_chars_with_text(
+                _, text_bbox_list, text_list, char_bbox_list, char_list = self.generate_mix_rows_chars_with_text(
                     x, y1, y2, row_length, np_page, char_spacing
                 )
                 text_bbox_records_list.extend(text_bbox_list)
                 text_records_list.extend(text_list)
+                char_bbox_records_list.extend(char_bbox_list)
+                char_records_list.extend(char_list)
 
         else:  # 纵向排列
 
@@ -218,11 +235,13 @@ class generate_text_lines_with_text_handle:
                 x1, x2 = xs[i - 1] + 1, xs[i] - 1
                 y = margin_h + int(random.uniform(0.0, 1) * margin_line_thickness)
                 col_length = page_height - y - margin_h
-                _, text_bbox_list, text_list = self.generate_mix_cols_chars_with_text(
+                _, text_bbox_list, text_list, char_bbox_list, char_list = self.generate_mix_cols_chars_with_text(
                     x1, x2, y, col_length, np_page, char_spacing
                 )
                 text_bbox_records_list.extend(text_bbox_list)
                 text_records_list.extend(text_list)
+                char_bbox_records_list.extend(char_bbox_list)
+                char_records_list.extend(char_list)
 
         # 将黑底白字转换为白底黑字
         np_page = reverse_image_color(np_img=np_page)
@@ -232,7 +251,7 @@ class generate_text_lines_with_text_handle:
         # print(len(text_bbox_list))
         # PIL_page.show()
 
-        return PIL_page, text_bbox_records_list, text_records_list
+        return PIL_page, text_bbox_records_list, text_records_list, char_bbox_records_list, char_records_list
 
     def generate_mix_rows_chars_with_text(self, x, y1, y2, row_length, np_background, char_spacing):
         row_height = y2 - y1 + 1
@@ -240,6 +259,8 @@ class generate_text_lines_with_text_handle:
 
         text_bbox_list = []
         text_list = []
+        char_bbox_list = []
+        char_list = []
         flag = 0 if random.random() < 0.6 else 1  # 以单行字串还是双行字串开始
         remaining_len = row_length
         while remaining_len >= row_height:
@@ -247,24 +268,30 @@ class generate_text_lines_with_text_handle:
             length = random.randint(row_height, remaining_len)
             flag += 1
             if flag % 2 == 1:
-                x, text_bbox, text = self.generate_one_row_chars_with_text(
+                x, text_bbox, text, char_bbox = self.generate_one_row_chars_with_text(
                     x, y1, y2, length, np_background, char_spacing
                 )
                 text_bbox_list.append(text_bbox)
                 text_list.append(text)
+                char_bbox_list.extend(char_bbox)
+                char_list.extend(text)
             else:
-                x, text1_bbox, text2_bbox, text1, text2 = self.generate_two_rows_chars_with_text(
+                x, text1_bbox, text2_bbox, text1, text2, char_bbox1, char_bbox2 = self.generate_two_rows_chars_with_text(
                     x, y1, y2, length, np_background, char_spacing
                 )
                 text_bbox_list.append(text1_bbox)
                 text_list.append(text1)
                 text_bbox_list.append(text2_bbox)
                 text_list.append(text2)
+                char_bbox_list.extend(char_bbox1)
+                char_list.extend(text1)
+                char_bbox_list.extend(char_bbox2)
+                char_list.extend(text2)
             remaining_len = row_length - (x - x_start)
 
         # pure_two_lines = True if len(text_bbox_list) == 2 else False    # 1,2,1,2,... or 2,1,2,1,...
 
-        return x, text_bbox_list, text_list
+        return x, text_bbox_list, text_list, char_bbox_list, char_list
 
     def generate_mix_cols_chars_with_text(self, x1, x2, y, col_length, np_background, char_spacing):
         col_width = x2 - x1 + 1
@@ -272,6 +299,8 @@ class generate_text_lines_with_text_handle:
 
         text_bbox_list = []
         text_list = []
+        char_bbox_list = []
+        char_list = []
         flag = 0 if random.random() < 0.6 else 1  # 以单行字串还是双行字串开始
         remaining_len = col_length
         while remaining_len >= col_width:
@@ -279,26 +308,32 @@ class generate_text_lines_with_text_handle:
             if flag % 2 == 1:
                 # 随机决定接下来的字串长度（这是大约数值，实际可能比它小,也可能比它大）
                 length = random.randint(col_width, min(remaining_len, col_width * 20))
-                y, text_bbox, text = self.generate_one_col_chars_with_text(
+                y, text_bbox, text, char_bbox = self.generate_one_col_chars_with_text(
                     x1, x2, y, length, np_background, char_spacing
                 )
                 text_bbox_list.append(text_bbox)
                 text_list.append(text)
+                char_bbox_list.extend(char_bbox)
+                char_list.extend(text)
             else:
                 # 随机决定接下来的字串长度（这是大约数值，实际可能比它小,也可能比它大）
                 length = random.randint(col_width, min(remaining_len, col_width * 10))
-                y, text1_bbox, text2_bbox, text1, text2 = self.generate_two_cols_chars_with_text(
+                y, text1_bbox, text2_bbox, text1, text2, char_bbox1, char_bbox2 = self.generate_two_cols_chars_with_text(
                     x1, x2, y, length, np_background, char_spacing
                 )
                 text_bbox_list.append(text1_bbox)
                 text_list.append(text1)
                 text_bbox_list.append(text2_bbox)
                 text_list.append(text2)
+                char_bbox_list.extend(char_bbox1)
+                char_list.extend(text1)
+                char_bbox_list.extend(char_bbox2)
+                char_list.extend(text2)
             remaining_len = col_length - (y - y_start)
 
         # pure_two_lines = True if len(text_bbox_list) == 2 else False    # 1,2,1,2,... or 2,1,2,1,...
 
-        return y, text_bbox_list, text_list
+        return y, text_bbox_list, text_list, char_bbox_list, char_list
 
     def generate_one_row_chars_with_text(self, x, y1, y2, length, np_background, char_spacing):
         """
@@ -327,20 +362,21 @@ class generate_text_lines_with_text_handle:
         _, _, tail_x2, tail_y2 = char_and_box_list[-1][1]
         text_bbox = (head_x1, head_y1, tail_x2, tail_y2)
         text = [char_and_box[0] for char_and_box in char_and_box_list]
+        char_bbox = [char_and_box[1] for char_and_box in char_and_box_list]
 
-        return x, text_bbox, text
+        return x, text_bbox, text, char_bbox
 
     def generate_two_rows_chars_with_text(self, x, y1, y2, length, np_background, char_spacing):
         row_height = y2 - y1 + 1
         mid_y = y1 + round(row_height / 2)
 
         # x, text_bbox, text
-        x_1, text1_bbox, text1 = self.generate_one_row_chars_with_text(
+        x_1, text1_bbox, text1, char_bbox1 = self.generate_one_row_chars_with_text(
             x, y1, mid_y, length, np_background, char_spacing)
-        x_2, text2_bbox, text2 = self.generate_one_row_chars_with_text(
+        x_2, text2_bbox, text2, char_bbox2 = self.generate_one_row_chars_with_text(
             x, mid_y + 1, y2, length, np_background, char_spacing)
 
-        return max(x_1, x_2), text1_bbox, text2_bbox, text1, text2
+        return max(x_1, x_2), text1_bbox, text2_bbox, text1, text2, char_bbox1, char_bbox2
 
     def generate_one_col_chars_with_text(self, x1, x2, y, length, np_background, char_spacing):
         # 记录下生成的汉字及其bounding-box
@@ -366,19 +402,20 @@ class generate_text_lines_with_text_handle:
         _, _, tail_x2, tail_y2 = char_and_box_list[-1][1]
         text_bbox = (head_x1, head_y1, tail_x2, tail_y2)
         text = [char_and_box[0] for char_and_box in char_and_box_list]
+        char_bbox = [char_and_box[1] for char_and_box in char_and_box_list]
 
-        return y, text_bbox, text
+        return y, text_bbox, text, char_bbox
 
     def generate_two_cols_chars_with_text(self, x1, x2, y, length, np_background, char_spacing):
         col_width = x2 - x1 + 1
         mid_x = x1 + round(col_width / 2)
 
-        y_1, text1_bbox, text1 = self.generate_one_col_chars_with_text(
+        y_1, text1_bbox, text1, char_bbox1 = self.generate_one_col_chars_with_text(
             mid_x + 1, x2, y, length, np_background, char_spacing)
-        y_2, text2_bbox, text2 = self.generate_one_col_chars_with_text(
+        y_2, text2_bbox, text2, char_bbox2 = self.generate_one_col_chars_with_text(
             x1, mid_x, y, length, np_background, char_spacing)
 
-        return max(y_1, y_2), text1_bbox, text2_bbox, text1, text2
+        return max(y_1, y_2), text1_bbox, text2_bbox, text1, text2, char_bbox1, char_bbox2
 
     def generate_char_img_into_unclosed_box_with_text(self,
             np_background,
