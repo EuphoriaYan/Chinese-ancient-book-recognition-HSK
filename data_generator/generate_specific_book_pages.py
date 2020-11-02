@@ -526,7 +526,8 @@ class generate_text_lines_with_text_handle:
         return chinese_char, bounding_box, char_box_tail
 
 
-'''def draw_single_char(ch, font, canvas_size):
+'''
+def draw_single_char(ch, font, canvas_size):
     img = Image.new("L", (canvas_size * 2, canvas_size * 2), 0)
     draw = ImageDraw.Draw(img)
     try:
@@ -601,7 +602,7 @@ if __name__ == '__main__':
 
     text = ''.join(text)
     handle = generate_text_lines_with_text_handle(
-        obj_num=5000,
+        obj_num=20000,
         text_type="vertical",
         text=text,
         char_size=64,
