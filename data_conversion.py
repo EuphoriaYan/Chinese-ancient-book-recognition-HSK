@@ -84,10 +84,10 @@ def generate_train_val_file():
     train_list = total_list[:19000]
     val_list = total_list[19000:]
     with open(train_file, 'w', encoding='utf-8') as fp:
-        for file in train_file:
+        for file in train_list:
             fp.write(file + '\n')
     with open(val_file, 'w', encoding='utf-8') as fp:
-        for file in val_file:
+        for file in val_list:
             fp.write(file + '\n')
 
 
