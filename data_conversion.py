@@ -69,7 +69,7 @@ def convert_fake_bookpages_to_ReCTS():
             CTS_json['lines'].append(char_json)
         with open(tar_path, 'w', encoding='utf-8') as fp:
             fp.write(json.dumps(CTS_json, ensure_ascii=False))
-        break
+        # break
 
 
 if __name__ == '__main__':
