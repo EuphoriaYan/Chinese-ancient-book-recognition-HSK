@@ -57,5 +57,6 @@ if __name__ == '__main__':
     # segment_double_line_main()
 
     # extract_paths_main()
+    convert_fake_bookpages_to_ReCTS()
 
     print("Done !")
