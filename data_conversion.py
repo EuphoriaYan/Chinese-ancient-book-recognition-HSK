@@ -7,6 +7,7 @@ from PIL import Image, ImageDraw
 import yaml
 import codecs
 from tqdm import tqdm
+import random
 
 from config import BOOK_PAGE_TAGS_FILE_H, BOOK_PAGE_IMGS_H
 from config import BOOK_PAGE_TAGS_FILE_V, BOOK_PAGE_IMGS_V
@@ -72,6 +73,24 @@ def convert_fake_bookpages_to_ReCTS():
         # break
 
 
+def generate_train_val_file():
+    root_path = 'data/book_pages/'
+    train_file = os.path.join(root_path, 'TDA_ReCTS_train_list.txt')
+    val_file = os.path.join(root_path, 'TDA_ReCTS_val_list.txt')
+    total_list = []
+    for jpg_file in os.listdir('data/book_pages/imgs_vertical'):
+        total_list.append(os.path.splitext(jpg_file)[0])
+    random.shuffle(total_list)
+    train_list = total_list[:19000]
+    val_list = total_list[19000:]
+    with open(train_file, 'w', encoding='utf-8') as fp:
+        for file in train_file:
+            fp.write(file + '\n')
+    with open(val_file, 'w', encoding='utf-8') as fp:
+        for file in val_file:
+            fp.write(file + '\n')
+
+
 if __name__ == '__main__':
     # convert_annotation_crnn(src_list=[(TEXT_LINE_TAGS_FILE_H, TEXT_LINE_IMGS_H)],
     #                         dest_file=CRNN_TEXT_LINE_TAGS_FILE_H)
@@ -87,6 +106,6 @@ if __name__ == '__main__':
     # segment_double_line_main()
 
     # extract_paths_main()
-    convert_fake_bookpages_to_ReCTS()
-
+    # convert_fake_bookpages_to_ReCTS()
+    generate_train_val_file()
     print("Done !")
