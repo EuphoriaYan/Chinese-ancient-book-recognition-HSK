@@ -6,6 +6,7 @@ import json
 from PIL import Image, ImageDraw
 import yaml
 import codecs
+from tqdm import tqdm
 
 from config import BOOK_PAGE_TAGS_FILE_H, BOOK_PAGE_IMGS_H
 from config import BOOK_PAGE_TAGS_FILE_V, BOOK_PAGE_IMGS_V
@@ -24,9 +25,6 @@ from recog_with_components.extract_data import main as extract_paths_main
 
 
 def convert_fake_bookpages_to_ReCTS():
-    os.makedirs('data/fake_bookpages/train/img', exist_ok=True)
-    os.makedirs('data/fake_bookpages/train/gt', exist_ok=True)
-    os.makedirs('data/fake_bookpages/val/img', exist_ok=True)
     os.makedirs('data/book_pages/gt', exist_ok=True)
     gt_file = 'data/book_pages/book_pages_tags_vertical_3.txt'
     gt_dict = dict()
@@ -35,6 +33,7 @@ def convert_fake_bookpages_to_ReCTS():
             line = line.strip().split('\t')
             gt_dict[line[0]] = json.loads(line[1])
     img_path = 'data/book_pages/imgs_vertical'
+    '''
     for img_file_name in os.listdir(img_path):
         img_file_path = os.path.join(img_path, img_file_name)
         img_gt = gt_dict[img_file_name]
@@ -45,7 +44,8 @@ def convert_fake_bookpages_to_ReCTS():
             draw.rectangle(bbox, outline=(255, 0, 0), width=3)
         img.show()
         break
-    for img_file_name in os.listdir(img_path):
+    '''
+    for img_file_name in tqdm(os.listdir(img_path)):
         tar_path = os.path.join('data/book_pages/gt', img_file_name.replace('.jpg', '.json'))
         CTS_json = dict()
         CTS_json['chars'] = []
