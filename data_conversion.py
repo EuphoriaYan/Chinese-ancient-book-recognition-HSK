@@ -4,6 +4,8 @@
 import os
 import json
 from PIL import Image, ImageDraw
+import yaml
+import codecs
 
 from config import BOOK_PAGE_TAGS_FILE_H, BOOK_PAGE_IMGS_H
 from config import BOOK_PAGE_TAGS_FILE_V, BOOK_PAGE_IMGS_V
@@ -20,10 +22,12 @@ from segment_text_line.data_conversion import main as segment_text_line_main
 from segment_double_line.data_conversion import main as segment_double_line_main
 from recog_with_components.extract_data import main as extract_paths_main
 
+
 def convert_fake_bookpages_to_ReCTS():
     os.makedirs('data/fake_bookpages/train/img', exist_ok=True)
     os.makedirs('data/fake_bookpages/train/gt', exist_ok=True)
     os.makedirs('data/fake_bookpages/val/img', exist_ok=True)
+    os.makedirs('data/book_pages/gt', exist_ok=True)
     gt_file = 'data/book_pages/book_pages_tags_vertical_3.txt'
     gt_dict = dict()
     with open(gt_file, 'r', encoding='utf-8') as fp:
@@ -38,8 +42,34 @@ def convert_fake_bookpages_to_ReCTS():
         draw = ImageDraw.Draw(img)
         char_bbox_list = img_gt['char_bbox_list']
         for bbox in char_bbox_list:
-            draw.rectangle(bbox, outline=(255,0,0), width=3)
+            draw.rectangle(bbox, outline=(255, 0, 0), width=3)
         img.show()
+        break
+    for img_file_name in os.listdir(img_path):
+        tar_path = os.path.join('data/book_pages/gt', img_file_name.replace('.jpg', '.json'))
+        CTS_json = dict()
+        CTS_json['chars'] = []
+        CTS_json['lines'] = []
+        img_gt = gt_dict[img_file_name]
+        for char, char_bbox in zip(img_gt['char_list'], img_gt['char_bbox_list']):
+            left, top, right, bottom = char_bbox
+            points = [left, top, right, top, right, bottom, left, bottom]
+            char_json = {'ignore': 0,
+                         'transcription': char,
+                         'points': points}
+            CTS_json['chars'].append(char_json)
+        for text, text_bbox in zip(img_gt['text_list'], img_gt['text_bbox_list']):
+            if len(text) == 1:
+                continue
+            left, top, right, bottom = text_bbox
+            points = [left, top, right, top, right, bottom, left, bottom]
+            char_json = {'ignore': 0,
+                         'transcription': ''.join(text),
+                         'points': points}
+            CTS_json['lines'].append(char_json)
+        with open(tar_path, 'w', encoding='utf-8') as fp:
+            fp.write(json.dumps(CTS_json, ensure_ascii=False))
+        break
 
 
 if __name__ == '__main__':
