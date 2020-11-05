@@ -31,7 +31,7 @@ def convert_fake_bookpages_to_ReCTS():
             line = line.strip().split('\t')
             gt_dict[line[0]] = json.loads(line[1])
     img_path = 'data/book_pages/imgs_vertical'
-    for img_file_name in img_path:
+    for img_file_name in os.listdir(img_path):
         img_file_path = os.path.join(img_path, img_file_name)
         img_gt = gt_dict[img_file_name]
         img = Image.open(img_file_path).convert('RGB')
