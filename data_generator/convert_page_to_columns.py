@@ -5,7 +5,7 @@ from PIL import Image
 from random import random
 
 
-def convert_page_to_columns(input_dir, train_output_dir, val_output_dir):
+def convert_page_to_columns(input_dir, train_output_dir, val_output_dir, train_ratio):
     input_gt = os.path.join(input_dir, 'book_pages_tags_vertical_3.txt')
     pic_gt = []
     with open(input_gt, 'r', encoding='utf-8') as gt:
@@ -25,7 +25,7 @@ def convert_page_to_columns(input_dir, train_output_dir, val_output_dir):
             for i, (bbox, text) in enumerate(zip(bbox_list, text_list)):
                 crop_img = img.crop(bbox)
                 save_dir = os.path.join('imgs', base_name + '_' + str(i) + ext)
-                if random() < 0.995:
+                if random() < train_ratio:
                     crop_img.save(os.path.join(train_output_dir, save_dir))
                     train_gt_file.write(save_dir + '\t' + ''.join(text) + '\n')
                 else:
@@ -38,5 +38,6 @@ if __name__ == '__main__':
     parser.add_argument('--input_dir', type=str, required=True)
     parser.add_argument('--train_output_dir', type=str, required=True)
     parser.add_argument('--val_output_dir', type=str, required=True)
+    parser.add_argument('--train_ratio', type=float, default=0.995)
     args = parser.parse_args()
-    convert_page_to_columns(args.input_dir, args.train_output_dir, args.val_output_dir)
+    convert_page_to_columns(args.input_dir, args.train_output_dir, args.val_output_dir, args.train_ratio)
