@@ -3,6 +3,7 @@ import os
 import json
 from PIL import Image
 from random import random
+from tqdm import tqdm
 
 
 def convert_page_to_columns(input_dir, train_output_dir, val_output_dir, train_ratio):
@@ -16,7 +17,7 @@ def convert_page_to_columns(input_dir, train_output_dir, val_output_dir, train_r
     os.makedirs(os.path.join(val_output_dir, 'imgs'), exist_ok=True)
     with open(os.path.join(train_output_dir, 'gt_file.txt'), 'w', encoding='utf-8') as train_gt_file, \
             open(os.path.join(val_output_dir, 'gt_file.txt'), 'w', encoding='utf-8') as val_gt_file:
-        for img_name, img_json in pic_gt:
+        for img_name, img_json in tqdm(pic_gt):
             img = Image.open(os.path.join(input_dir, 'imgs_vertical', img_name))
             bbox_list = img_json['text_bbox_list']
             text_list = img_json['text_list']
