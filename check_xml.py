@@ -57,9 +57,9 @@ class PageHandler(xml.sax.ContentHandler):
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('input_img', type=str, required=True)
-    parser.add_argument('input_json', type=str, default=None)
-    parser.add_argument('input_xml', type=str, default=None)
+    parser.add_argument('--input_img', type=str, required=True)
+    parser.add_argument('--input_json', type=str, default=None)
+    parser.add_argument('--input_xml', type=str, default=None)
     args = parser.parse_args()
     return args
 
