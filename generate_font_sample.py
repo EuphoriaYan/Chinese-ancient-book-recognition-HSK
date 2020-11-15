@@ -148,8 +148,11 @@ class create_mix_ch_handle:
             self.type_fonts = {idx: font_line.strip() for idx, font_line in enumerate(fp)}
         self.type_fonts_rev = {v: k for k, v in self.type_fonts.items()}
 
-        with open(bad_font_file, 'r', encoding='utf-8') as fp:
-            self.bad_font_ids = [int(_) for _ in fp.readline().strip().split()]
+        if bad_font_file:
+            with open(bad_font_file, 'r', encoding='utf-8') as fp:
+                self.bad_font_ids = [int(_) for _ in fp.readline().strip().split()]
+        else:
+            self.bad_font_ids = []
         self.fake_prob = 0.05
 
         checkpoint_dir = os.path.join(experiment_dir, "checkpoint")

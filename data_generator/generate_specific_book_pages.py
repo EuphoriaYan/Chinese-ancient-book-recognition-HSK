@@ -49,6 +49,7 @@ def check_text_type(text_type):
 class generate_text_lines_with_text_handle:
     def __init__(self, obj_num, shape=None, text_type="horizontal",
                  text='野火烧不尽春风吹又生', char_size=64, augment=True,
+                 fonts_json='/disks/sdb/projs/AncientBooks/data/chars/font_missing.json',
                  bad_font_file='charset/songhei_error_font.txt',
                  experiment_dir='songhei_experiment/',
                  type_fonts='type/宋黑类字符集.txt',
@@ -68,6 +69,7 @@ class generate_text_lines_with_text_handle:
         self.char_size = char_size
         self.augment = augment
         self.generate_font_handle = create_mix_ch_handle(
+            fonts_json=fonts_json,
             bad_font_file=bad_font_file,
             experiment_dir=experiment_dir,
             type_fonts=type_fonts,
@@ -597,7 +599,7 @@ if __name__ == '__main__':
     #    text = [line.strip() for line in fp]
     #    text = [re.sub('[，。“”‘’？！《》、（）:：；;·［］【】〈〉]', '', line) for line in text]
     #    text = list(filter(None, text))
-    with open('raw_text/leishu.txt', 'r', encoding='utf-8') as fp:
+    with open('raw_text/jingbu.txt', 'r', encoding='utf-8') as fp:
         text = [line.strip() for line in fp]
 
     text = ''.join(text)
@@ -607,10 +609,11 @@ if __name__ == '__main__':
         text=text,
         char_size=64,
         augment=True,
-        bad_font_file='charset/songhei_error_font.txt',
-        experiment_dir='songhei_experiment/',
-        type_fonts='type/宋黑类字符集.txt',
-        embedding_num=250,
+        fonts_json='/disks/sdb/projs/AncientBooks/data/chars/font_missing1.json',
+        bad_font_file='',
+        experiment_dir='fz2_experiment/',
+        type_fonts='type/方正第二批.txt',
+        embedding_num=520,
         resume=70000,
         init_num=0
     )
