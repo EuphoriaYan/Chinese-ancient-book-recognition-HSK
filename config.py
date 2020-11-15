@@ -64,7 +64,7 @@ EXTERNEL_IMAGES_DIR = "E:/pycharm_project/ziku_images"
 # ************************* Commonly used ********************************
 # chinese char images
 CHAR_IMG_SIZE = 64
-MAX_ROTATE_ANGLE = 10
+MAX_ROTATE_ANGLE = 5
 NUM_IMAGES_PER_FONT = 10
 
 # text line images
