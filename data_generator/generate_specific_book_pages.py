@@ -622,8 +622,10 @@ if __name__ == '__main__':
 
     with open(args.text_file, 'r', encoding='utf-8') as fp:
         text = [line.strip() for line in fp]
-
+        text = [re.sub('[，。“”‘’？！《》、（）:：；;·［］【】〈〉]', '', line) for line in text]
+        text = list(filter(None, text))
     text = ''.join(text)
+
     handle = generate_text_lines_with_text_handle(
         obj_num=args.obj_num, text_type=args.text_type, text=text, char_size=args.char_size, augment=args.augment,
         fonts_json=args.fonts_json, bad_font_file=args.bad_font_file, experiment_dir=args.experiment_dir,
