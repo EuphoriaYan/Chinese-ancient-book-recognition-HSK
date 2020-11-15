@@ -14,6 +14,7 @@ import random
 import cv2
 import re
 import numpy as np
+import argparse
 from PIL import Image, ImageDraw, ImageFont
 from queue import Queue
 from torchvision import transforms
@@ -594,27 +595,38 @@ def resize_img_by_opencv(np_img, obj_size):
     return resized_np_img
 
 
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--obj_num', type=int, required=True)
+    parser.add_argument('--text_type', type=str, default='vertical')
+    parser.add_argument('--text_file', type=str, required=True)
+    parser.add_argument('--char_size', type=int, default=64)
+    parser.add_argument('--augment', action='store_true')
+    parser.add_argument('--fonts_json', type=str, required=True)
+    parser.add_argument('--bad_font_file', type=str, default=None)
+    parser.add_argument('--experiment_dir', type=str, required=True)
+    parser.add_argument('--type_fonts', type=str, required=True)
+    parser.add_argument('--embedding_num', type=int, required=True)
+    parser.add_argument('--resume',type=int, required=True)
+    parser.add_argument('--init_num', type=int, default=0)
+    args = parser.parse_args()
+    return args
+
+
 if __name__ == '__main__':
     #with open(r'..\corpus\cleaned\leishu.txt', 'r', encoding='utf-8') as fp:
     #    text = [line.strip() for line in fp]
     #    text = [re.sub('[，。“”‘’？！《》、（）:：；;·［］【】〈〉]', '', line) for line in text]
     #    text = list(filter(None, text))
-    with open('raw_text/jingbu.txt', 'r', encoding='utf-8') as fp:
+    args = parse_args()
+
+    with open(args.text_file, 'r', encoding='utf-8') as fp:
         text = [line.strip() for line in fp]
 
     text = ''.join(text)
     handle = generate_text_lines_with_text_handle(
-        obj_num=20000,
-        text_type="vertical",
-        text=text,
-        char_size=64,
-        augment=True,
-        fonts_json='/disks/sdb/projs/AncientBooks/data/chars/font_missing1.json',
-        bad_font_file='',
-        experiment_dir='fz2_experiment/',
-        type_fonts='type/方正第二批.txt',
-        embedding_num=520,
-        resume=70000,
-        init_num=0
+        obj_num=args.obj_num, text_type=args.text_type, text=text, char_size=args.char_size, augment=args.augment,
+        fonts_json=args.fonts_json, bad_font_file=args.bad_font_file, experiment_dir=args.experiment_dir,
+        type_fonts=args.type_fonts, embedding_num=args.embedding_num, resume=args.resume, init_num=args.init_num
     )
     handle.generate_book_page_with_text()
