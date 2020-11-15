@@ -1,6 +1,7 @@
 from PIL import Image, ImageDraw
 import argparse
 import xml.sax
+import json
 
 
 class PageHandler(xml.sax.ContentHandler):
@@ -57,7 +58,8 @@ class PageHandler(xml.sax.ContentHandler):
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('input_img', type=str, required=True)
-    parser.add_argument('input_xml', type=str, required=True)
+    parser.add_argument('input_json', type=str, default=None)
+    parser.add_argument('input_xml', type=str, default=None)
     args = parser.parse_args()
     return args
 
@@ -66,9 +68,23 @@ if __name__ == '__main__':
     args = parse_args()
     img = Image.open(args.input_img).convert('RGB')
     draw = ImageDraw.Draw(img)
-    xml_file = args.input_xml
-    xml_parser = xml.sax.make_parser()
-    xml_parser.setFeature(xml.sax.handler.feature_namespaces, 0)
-    handler = PageHandler()
-    xml_parser.setContentHandler(handler)
-    xml_parser.parse(xml_file)
+    if args.input_json is not None and args.input_xml is not None:
+        raise ValueError
+    if args.input_json is None and args.input_xml is None:
+        raise ValueError
+    if args.input_json is not None:
+        json_file = args.input_json
+        json_data = json.load(open(json_file, 'r', encoding='utf-8'))
+        regions = json_data['regions']
+        for region in regions:
+            bbox = region['boundingBox']
+            bbox = (bbox['left'], bbox['top'], bbox['left']+bbox['width'], bbox['top']+bbox['height'])
+            draw.rectangle(bbox, outline=(255,0,0), width=3)
+        img.show()
+    if args.input_xml is not None:
+        xml_file = args.input_xml
+        xml_parser = xml.sax.make_parser()
+        xml_parser.setFeature(xml.sax.handler.feature_namespaces, 0)
+        handler = PageHandler()
+        xml_parser.setContentHandler(handler)
+        xml_parser.parse(xml_file)
