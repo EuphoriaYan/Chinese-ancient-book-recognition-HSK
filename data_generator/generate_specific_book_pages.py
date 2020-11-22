@@ -628,7 +628,7 @@ if __name__ == '__main__':
     text = ''.join(text)
     '''
     text = []
-    with open('../charset/charset_xl.txt', 'r', encoding='utf-8') as fp:
+    with open('./charset/charset_xl.txt', 'r', encoding='utf-8') as fp:
         raw_charset = [line.strip() for line in fp]
     for _ in range(50):
         charset = copy.deepcopy(raw_charset)
