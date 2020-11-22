@@ -62,7 +62,7 @@ def ignorable_chars():
         for line in fr:
             chinese_char = line.strip()[0]
             chars.add(chinese_char)
-    return "".join(chars)
+    return chars
 
 
 def important_chars():
@@ -71,7 +71,7 @@ def important_chars():
         for line in fr:
             chinese_char = line.strip()[0]
             chars.add(chinese_char)
-    return "".join(chars)
+    return chars
 
 
 # General tasks
