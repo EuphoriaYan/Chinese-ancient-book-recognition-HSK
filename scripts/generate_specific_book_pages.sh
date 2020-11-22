@@ -5,7 +5,7 @@ export CUDA_VISIBLE_DEVICES=2
 python data_generator/generate_specific_book_pages.py \
 --obj_num 20000 \
 --text_type vertical \
---text_file raw_text/jingbu.txt \
+--text_file cover_charset \
 --char_size 64 \
 --augment \
 --fonts_json /disks/sdb/projs/AncientBooks/data/chars/font_missing1.json \
