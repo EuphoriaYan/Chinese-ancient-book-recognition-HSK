@@ -19,6 +19,7 @@ from PIL import Image, ImageDraw, ImageFont
 from queue import Queue
 from torchvision import transforms
 from torch import nn
+import copy
 
 from config import FONT_FILE_DIR, EXTERNEL_IMAGES_DIR, MAX_ROTATE_ANGLE
 from config import BOOK_PAGE_SHAPE_LIST
@@ -619,11 +620,20 @@ if __name__ == '__main__':
     #    text = [re.sub('[，。“”‘’？！《》、（）:：；;·［］【】〈〉]', '', line) for line in text]
     #    text = list(filter(None, text))
     args = parse_args()
-
+    '''
     with open(args.text_file, 'r', encoding='utf-8') as fp:
         text = [line.strip() for line in fp]
         text = [re.sub('[，。“”‘’？！《》、（）:：；;·［］【】〈〉]', '', line) for line in text]
         text = list(filter(None, text))
+    text = ''.join(text)
+    '''
+    text = []
+    with open('../charset/charset_xl.txt', 'r', encoding='utf-8') as fp:
+        raw_charset = [line.strip() for line in fp]
+    for _ in range(50):
+        charset = copy.deepcopy(raw_charset)
+        random.shuffle(charset)
+        text.extend(charset)
     text = ''.join(text)
 
     handle = generate_text_lines_with_text_handle(
