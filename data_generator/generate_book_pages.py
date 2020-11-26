@@ -13,7 +13,7 @@ import json
 import random
 import cv2
 import numpy as np
-import tensorflow as tf
+# import tensorflow as tf
 from PIL import Image, ImageDraw
 
 from util import check_or_makedirs
@@ -101,7 +101,7 @@ def generate_book_page_imgs_with_img(obj_num=10, text_type="horizontal", init_nu
                 print(" %d / %d Done" % (i, obj_num))
                 sys.stdout.flush()
 
-
+'''
 def generate_book_page_tfrecords(obj_num=10, text_type="horizontal", init_num=0, page_shape=None):
     text_type = check_text_type(text_type)
 
@@ -151,7 +151,7 @@ def generate_book_page_tfrecords(obj_num=10, text_type="horizontal", init_num=0,
     # 关闭所有的tfrecords写者
     [writer.close() for writer in writers_list]
     return
-
+'''
 
 def create_book_page(shape=(960, 540), text_type="horizontal"):
     text_type = check_text_type(text_type)
@@ -422,7 +422,7 @@ def create_book_page_with_img(shape=(960, 540), text_type="horizontal"):
 
 """ ****************** 检查生成的tfrecords文件是否可用 ******************* """
 
-
+'''
 def display_tfrecords(tfrecords_file):
     data_set = tf.data.TFRecordDataset([tfrecords_file])
 
@@ -469,7 +469,7 @@ def display_tfrecords(tfrecords_file):
         PIL_img = Image.fromarray(image)
         # PIL_img.show()
         print(text_boxes)
-
+'''
 
 if __name__ == '__main__':
     # generate_book_page_imgs(obj_num=100, text_type="horizontal", page_shape=(416, 416))
