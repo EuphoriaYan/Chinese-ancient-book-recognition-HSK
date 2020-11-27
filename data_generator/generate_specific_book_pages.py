@@ -56,7 +56,7 @@ class generate_text_lines_with_text_handle:
                  experiment_dir='songhei_experiment/',
                  type_fonts='type/宋黑类字符集.txt',
                  embedding_num=250, resume=70000,
-                 init_num=0):
+                 init_num=0, special_type='normal'):
         self.text = Queue()
         for char in text:
             self.text.put(char)
@@ -79,6 +79,7 @@ class generate_text_lines_with_text_handle:
             resume=resume
         )
         self.init_num = init_num
+        self.special_type=special_type
 
     def generate_book_page_with_text(self):
         text_type = check_text_type(self.text_type)
@@ -280,17 +281,20 @@ class generate_text_lines_with_text_handle:
                 char_bbox_list.extend(char_bbox)
                 char_list.extend(text)
             else:
-                x, text1_bbox, text2_bbox, text1, text2, char_bbox1, char_bbox2 = self.generate_two_rows_chars_with_text(
-                    x, y1, y2, length, np_background, char_spacing
-                )
-                text_bbox_list.append(text1_bbox)
-                text_list.append(text1)
-                text_bbox_list.append(text2_bbox)
-                text_list.append(text2)
-                char_bbox_list.extend(char_bbox1)
-                char_list.extend(text1)
-                char_bbox_list.extend(char_bbox2)
-                char_list.extend(text2)
+                if self.special_type == 'split':
+                    x -= length
+                else:
+                    x, text1_bbox, text2_bbox, text1, text2, char_bbox1, char_bbox2 = self.generate_two_rows_chars_with_text(
+                        x, y1, y2, length, np_background, char_spacing
+                    )
+                    text_bbox_list.append(text1_bbox)
+                    text_list.append(text1)
+                    text_bbox_list.append(text2_bbox)
+                    text_list.append(text2)
+                    char_bbox_list.extend(char_bbox1)
+                    char_list.extend(text1)
+                    char_bbox_list.extend(char_bbox2)
+                    char_list.extend(text2)
             remaining_len = row_length - (x - x_start)
 
         # pure_two_lines = True if len(text_bbox_list) == 2 else False    # 1,2,1,2,... or 2,1,2,1,...
@@ -322,17 +326,20 @@ class generate_text_lines_with_text_handle:
             else:
                 # 随机决定接下来的字串长度（这是大约数值，实际可能比它小,也可能比它大）
                 length = random.randint(col_width, min(remaining_len, col_width * 10))
-                y, text1_bbox, text2_bbox, text1, text2, char_bbox1, char_bbox2 = self.generate_two_cols_chars_with_text(
-                    x1, x2, y, length, np_background, char_spacing
-                )
-                text_bbox_list.append(text1_bbox)
-                text_list.append(text1)
-                text_bbox_list.append(text2_bbox)
-                text_list.append(text2)
-                char_bbox_list.extend(char_bbox1)
-                char_list.extend(text1)
-                char_bbox_list.extend(char_bbox2)
-                char_list.extend(text2)
+                if self.special_type == 'split':
+                    y += length
+                else:
+                    y, text1_bbox, text2_bbox, text1, text2, char_bbox1, char_bbox2 = self.generate_two_cols_chars_with_text(
+                        x1, x2, y, length, np_background, char_spacing
+                    )
+                    text_bbox_list.append(text1_bbox)
+                    text_list.append(text1)
+                    text_bbox_list.append(text2_bbox)
+                    text_list.append(text2)
+                    char_bbox_list.extend(char_bbox1)
+                    char_list.extend(text1)
+                    char_bbox_list.extend(char_bbox2)
+                    char_list.extend(text2)
             remaining_len = col_length - (y - y_start)
 
         # pure_two_lines = True if len(text_bbox_list) == 2 else False    # 1,2,1,2,... or 2,1,2,1,...
@@ -610,6 +617,7 @@ def parse_args():
     parser.add_argument('--embedding_num', type=int, required=True)
     parser.add_argument('--resume',type=int, required=True)
     parser.add_argument('--init_num', type=int, default=0)
+    parser.add_argument('--special_type', type=str, default='normal', choices=['normal', 'split', 'num_end'])
     args = parser.parse_args()
     return args
 
@@ -639,6 +647,7 @@ if __name__ == '__main__':
     handle = generate_text_lines_with_text_handle(
         obj_num=args.obj_num, text_type=args.text_type, text=text, char_size=args.char_size, augment=args.augment,
         fonts_json=args.fonts_json, bad_font_file=args.bad_font_file, experiment_dir=args.experiment_dir,
-        type_fonts=args.type_fonts, embedding_num=args.embedding_num, resume=args.resume, init_num=args.init_num
+        type_fonts=args.type_fonts, embedding_num=args.embedding_num, resume=args.resume, init_num=args.init_num,
+        special_type=args.special_type
     )
     handle.generate_book_page_with_text()

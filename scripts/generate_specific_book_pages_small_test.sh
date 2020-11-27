@@ -3,7 +3,7 @@
 export CUDA_VISIBLE_DEVICES=1
 
 python data_generator/generate_specific_book_pages.py \
---obj_num 20000 \
+--obj_num 5 \
 --text_type vertical \
 --text_file cover_charset \
 --char_size 64 \
@@ -14,3 +14,4 @@ python data_generator/generate_specific_book_pages.py \
 --embedding_num 520 \
 --resume 180000 \
 --init_num 0 \
+--special_type split \
