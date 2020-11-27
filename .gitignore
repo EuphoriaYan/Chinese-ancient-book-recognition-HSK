@@ -61,3 +61,6 @@ test_imgs/
 
 # experiments
 *_experiment/
+
+# test
+scripts/*test.sh
