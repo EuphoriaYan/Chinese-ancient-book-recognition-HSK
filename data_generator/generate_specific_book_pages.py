@@ -356,11 +356,12 @@ class generate_text_lines_with_text_handle:
         row_end = x + length - 1
         row_height = y2 - y1 + 1
         while length >= row_height:
+            if length < 2 * row_height:
+                last_char = True
+            else:
+                last_char = False
             chinese_char, bounding_box, x_tail = self.generate_char_img_into_unclosed_box_with_text(
-                np_background,
-                x1=x, y1=y1,
-                x2=None, y2=y2,
-                char_spacing=char_spacing,
+                np_background, x1=x, y1=y1, x2=None, y2=y2, char_spacing=char_spacing, last_char=last_char
             )
 
             char_and_box_list.append((chinese_char, bounding_box))
@@ -396,13 +397,13 @@ class generate_text_lines_with_text_handle:
         col_end = y + length - 1
         col_width = x2 - x1 + 1
         while length >= col_width:
+            if length < 2 * col_width:
+                last_char = True
+            else:
+                last_char = False
             chinese_char, bounding_box, y_tail = self.generate_char_img_into_unclosed_box_with_text(
-                np_background,
-                x1=x1, y1=y,
-                x2=x2, y2=None,
-                char_spacing=char_spacing,
+                np_background, x1=x1, y1=y, x2=x2, y2=None, char_spacing=char_spacing, last_char=last_char
             )
-
             char_and_box_list.append((chinese_char, bounding_box))
             added_length = y_tail - y
             length -= added_length
@@ -428,11 +429,8 @@ class generate_text_lines_with_text_handle:
 
         return max(y_1, y_2), text1_bbox, text2_bbox, text1, text2, char_bbox1, char_bbox2
 
-    def generate_char_img_into_unclosed_box_with_text(self,
-                                                      np_background,
-                                                      x1, y1, x2=None, y2=None,
-                                                      char_spacing=(0.05, 0.05),
-                                                      ):
+    def generate_char_img_into_unclosed_box_with_text(self, np_background, x1, y1, x2=None, y2=None,
+                                                      char_spacing=(0.05, 0.05), last_char=False):
 
         if x2 is None and y2 is None:
             raise ValueError("There is one and only one None in (x2, y2).")
@@ -442,11 +440,14 @@ class generate_text_lines_with_text_handle:
         chinese_char = ' '
         PIL_char_img = None
         while PIL_char_img is None:
-            # 生成白底黑字的字，包含文字
-            if not self.text.empty():
-                chinese_char = self.text.get()
+            if self.special_type == 'num_end':
+                chinese_char = random.choice(['一', '二', '三'])
             else:
-                chinese_char = ' '
+                # 生成白底黑字的字，包含文字
+                if not self.text.empty():
+                    chinese_char = self.text.get()
+                else:
+                    chinese_char = ' '
             PIL_char_img, flag = self.generate_font_handle.get_mix_character(chinese_char)
 
         PIL_char_img = PIL_char_img.resize((self.char_size, self.char_size))
