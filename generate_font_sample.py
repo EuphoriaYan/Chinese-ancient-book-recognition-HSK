@@ -1,6 +1,3 @@
-
-
-
 # -*- coding: utf-8 -*-
 import argparse
 import sys
@@ -120,7 +117,7 @@ class create_mix_ch_handle:
                  fonts_json='/disks/sdb/projs/AncientBooks/data/chars/font_missing.json',
                  type_fonts='type/宋黑类字符集.txt',
                  input_nc=1, embedding_num=250, embedding_dim=128,  # model settings
-                 Lconst_penalty=15, Lcategory_penalty=1.0, gpu_ids=['cuda'], resume=240000,    # model settings
+                 Lconst_penalty=15, Lcategory_penalty=1.0, gpu_ids=['cuda'], resume=240000,  # model settings
                  char_size=250, canvas_size=256,
                  fake_prob=0.03):
 

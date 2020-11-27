@@ -1,4 +1,3 @@
-
 from PIL import Image, ImageDraw
 import numpy as np
 from tqdm import tqdm
@@ -8,7 +7,7 @@ import json
 
 
 def cal_dis(pA, pB):
-    return math.sqrt((pA[0] - pB[0])**2 + (pA[1] - pB[1])**2)
+    return math.sqrt((pA[0] - pB[0]) ** 2 + (pA[1] - pB[1]) ** 2)
 
 
 def add_noise(img, generate_ratio=0.003, generate_size=0.006):
@@ -54,4 +53,3 @@ def add_noise(img, generate_ratio=0.003, generate_size=0.006):
 
     img = Image.fromarray(img)
     return img
-

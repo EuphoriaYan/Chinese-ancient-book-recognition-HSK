@@ -138,7 +138,7 @@ def segment_predict(images=None,
             split_positions = remove_pad_np(nms_split_positions[j])
             split_positions = split_positions / _scale_ratio_list[j]
             if (segment_task, text_type) in (
-            ("book_page", "h"), ("double_line", "h"), ("text_line", "v"), ("mix_line", "v")):
+                    ("book_page", "h"), ("double_line", "h"), ("text_line", "v"), ("mix_line", "v")):
                 _, split_positions = restore_original_angle(np_img=None, pred_split_positions=split_positions)
             split_positions_list.append(split_positions)
             scores_list.append(scores)
@@ -148,7 +148,7 @@ def segment_predict(images=None,
         check_or_makedirs(dest_dir)
         for i in range(len(np_img_list)):
             if (segment_task, text_type) in (
-            ("book_page", "h"), ("double_line", "h"), ("text_line", "v"), ("mix_line", "v")):
+                    ("book_page", "h"), ("double_line", "h"), ("text_line", "v"), ("mix_line", "v")):
                 np_img, split_positions = rotate_90_degrees(np_img_list[i], split_positions_list[i])
             else:
                 np_img, split_positions = np_img_list[i], split_positions_list[i]
@@ -156,7 +156,7 @@ def segment_predict(images=None,
             np_img = visualize.draw_split_lines(np_img, split_positions, scores_list[i])  # 可视化
 
             if (segment_task, text_type) in (
-            ("book_page", "h"), ("double_line", "h"), ("text_line", "v"), ("mix_line", "v")):
+                    ("book_page", "h"), ("double_line", "h"), ("text_line", "v"), ("mix_line", "v")):
                 np_img, _ = restore_original_angle(np_img)
 
             PIL_img = Image.fromarray(np_img)

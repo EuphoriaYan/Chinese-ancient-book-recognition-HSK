@@ -239,7 +239,6 @@ def printlike_fibrous(image, blur=0.5, blotches=5e-5, paper_range=(0.8, 1.0), in
 
 
 def test():
-
     img = np.array(Image.open('data/book_pages/imgs_vertical/book_page_0.jpg'))
     # img = distort_with_noise(img, bounded_gaussian_noise(img.shape, 15.0, 5.0))
     # img = ndi.gaussian_filter(img, 0.5)

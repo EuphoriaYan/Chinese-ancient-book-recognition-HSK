@@ -78,8 +78,8 @@ if __name__ == '__main__':
         regions = json_data['regions']
         for region in regions:
             bbox = region['boundingBox']
-            bbox = (bbox['left'], bbox['top'], bbox['left']+bbox['width'], bbox['top']+bbox['height'])
-            draw.rectangle(bbox, outline=(255,0,0), width=3)
+            bbox = (bbox['left'], bbox['top'], bbox['left'] + bbox['width'], bbox['top'] + bbox['height'])
+            draw.rectangle(bbox, outline=(255, 0, 0), width=3)
         img.show()
     if args.input_xml is not None:
         xml_file = args.input_xml

@@ -101,6 +101,7 @@ def generate_book_page_imgs_with_img(obj_num=10, text_type="horizontal", init_nu
                 print(" %d / %d Done" % (i, obj_num))
                 sys.stdout.flush()
 
+
 '''
 def generate_book_page_tfrecords(obj_num=10, text_type="horizontal", init_num=0, page_shape=None):
     text_type = check_text_type(text_type)
@@ -152,6 +153,7 @@ def generate_book_page_tfrecords(obj_num=10, text_type="horizontal", init_num=0,
     [writer.close() for writer in writers_list]
     return
 '''
+
 
 def create_book_page(shape=(960, 540), text_type="horizontal"):
     text_type = check_text_type(text_type)

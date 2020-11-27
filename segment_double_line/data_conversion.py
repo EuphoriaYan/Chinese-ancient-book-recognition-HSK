@@ -50,7 +50,7 @@ def check_tags(tags_file, segment_task, text_type):
 
         text_type = text_type[0].lower()
         if (segment_task, text_type) in (
-        ("book_page", "h"), ("double_line", "h"), ("text_line", "v"), ("mix_line", "v")):
+                ("book_page", "h"), ("double_line", "h"), ("text_line", "v"), ("mix_line", "v")):
             np_img, split_pos = rotate_90_degrees(np_img, split_pos)
 
         np_img = draw_split_lines(np_img, split_pos)

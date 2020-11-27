@@ -79,7 +79,7 @@ class generate_text_lines_with_text_handle:
             resume=resume
         )
         self.init_num = init_num
-        self.special_type=special_type
+        self.special_type = special_type
 
     def generate_book_page_with_text(self):
         text_type = check_text_type(self.text_type)
@@ -429,10 +429,10 @@ class generate_text_lines_with_text_handle:
         return max(y_1, y_2), text1_bbox, text2_bbox, text1, text2, char_bbox1, char_bbox2
 
     def generate_char_img_into_unclosed_box_with_text(self,
-            np_background,
-            x1, y1, x2=None, y2=None,
-            char_spacing=(0.05, 0.05),
-        ):
+                                                      np_background,
+                                                      x1, y1, x2=None, y2=None,
+                                                      char_spacing=(0.05, 0.05),
+                                                      ):
 
         if x2 is None and y2 is None:
             raise ValueError("There is one and only one None in (x2, y2).")
@@ -582,6 +582,7 @@ def draw_single_char(ch, font, canvas_size):
     return img
 '''
 
+
 # 对字体图像做等比例缩放
 def resize_img_by_opencv(np_img, obj_size):
     cur_height, cur_width = np_img.shape[:2]
@@ -615,7 +616,7 @@ def parse_args():
     parser.add_argument('--experiment_dir', type=str, required=True)
     parser.add_argument('--type_fonts', type=str, required=True)
     parser.add_argument('--embedding_num', type=int, required=True)
-    parser.add_argument('--resume',type=int, required=True)
+    parser.add_argument('--resume', type=int, required=True)
     parser.add_argument('--init_num', type=int, default=0)
     parser.add_argument('--special_type', type=str, default='normal', choices=['normal', 'split', 'num_end'])
     args = parser.parse_args()
@@ -623,7 +624,7 @@ def parse_args():
 
 
 if __name__ == '__main__':
-    #with open(r'..\corpus\cleaned\leishu.txt', 'r', encoding='utf-8') as fp:
+    # with open(r'..\corpus\cleaned\leishu.txt', 'r', encoding='utf-8') as fp:
     #    text = [line.strip() for line in fp]
     #    text = [re.sub('[，。“”‘’？！《》、（）:：；;·［］【】〈〉]', '', line) for line in text]
     #    text = list(filter(None, text))

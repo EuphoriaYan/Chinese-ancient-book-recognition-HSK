@@ -81,6 +81,7 @@ def generate_one_text_line_imgs(obj_num=100, text_type="horizontal", text_shape=
                 print("Process bar: %.2f%%" % (i * 100 / obj_num))
                 sys.stdout.flush()
 
+
 '''
 def generate_one_text_line_tfrecords(obj_num=100, text_type="horizontal", init_num=0, text_shape=None, edges=False):
     text_type = check_text_type(text_type)
@@ -138,6 +139,7 @@ def generate_one_text_line_tfrecords(obj_num=100, text_type="horizontal", init_n
     return
 '''
 
+
 def generate_two_text_line_imgs(obj_num=100, text_type="horizontal", text_shape=None):
     text_type = check_text_type(text_type)
 
@@ -168,6 +170,7 @@ def generate_two_text_line_imgs(obj_num=100, text_type="horizontal", text_shape=
             if i % 50 == 0:
                 print("Process bar: %.2f%%" % (i * 100 / obj_num))
                 sys.stdout.flush()
+
 
 '''
 def generate_two_text_line_tfrecords(obj_num=100, text_type="horizontal", init_num=0, text_shape=None, edges=False):
@@ -221,6 +224,7 @@ def generate_two_text_line_tfrecords(obj_num=100, text_type="horizontal", init_n
     return
 '''
 
+
 def generate_mix_text_line_imgs(obj_num=100, text_type="horizontal", text_shape=None):
     text_type = check_text_type(text_type)
 
@@ -250,6 +254,7 @@ def generate_mix_text_line_imgs(obj_num=100, text_type="horizontal", text_shape=
             if i % 50 == 0:
                 print("Process bar: %.2f%%" % (i * 100 / obj_num))
                 sys.stdout.flush()
+
 
 '''
 def generate_mix_text_line_tfrecords(obj_num=100, text_type="horizontal", init_num=0, text_shape=None, edges=False):
@@ -301,6 +306,7 @@ def generate_mix_text_line_tfrecords(obj_num=100, text_type="horizontal", init_n
     [writer.close() for writer in writers_list]
     return
 '''
+
 
 def draw_edges_around_text(np_img, text_type, line_type="single"):
     img_h, img_w = np_img.shape[:2]
@@ -622,7 +628,8 @@ def generate_mix_rows_chars(x, y1, y2, row_length, np_background, char_spacing, 
             text_bbox_list.append(text_bbox)
             head_tail_list.append((text_bbox[0], text_bbox[2]))
         else:
-            x, text1_bbox, text2_bbox, _ = generate_two_rows_chars(x, y1, y2, length, np_background, char_spacing, use_img)
+            x, text1_bbox, text2_bbox, _ = generate_two_rows_chars(x, y1, y2, length, np_background, char_spacing,
+                                                                   use_img)
             text_bbox_list.extend([text1_bbox, text2_bbox])
             head_tail_list.append((min(text1_bbox[0], text2_bbox[0]), max(text1_bbox[2], text2_bbox[2])))
         remaining_len = row_length - (x - x_start)
@@ -658,7 +665,8 @@ def generate_mix_cols_chars(x1, x2, y, col_length, np_background, char_spacing, 
             text_bbox_list.append(text_bbox)
             head_tail_list.append((text_bbox[1], text_bbox[3]))
         else:
-            y, text1_bbox, text2_bbox, _ = generate_two_cols_chars(x1, x2, y, length, np_background, char_spacing, use_img)
+            y, text1_bbox, text2_bbox, _ = generate_two_cols_chars(x1, x2, y, length, np_background, char_spacing,
+                                                                   use_img)
             text_bbox_list.extend([text1_bbox, text2_bbox])
             head_tail_list.append((min(text1_bbox[1], text2_bbox[1]), max(text1_bbox[3], text2_bbox[3])))
         remaining_len = col_length - (y - y_start)
@@ -868,7 +876,7 @@ def chinese_char_img_generator_using_shufa(img_size=64):
                 bigger_PIL_img = generate_bigger_image_by_shufa(chinese_char, shufa_dir, img_size)
                 # 检查生成的灰度图像是否可用，黑底白字
                 image_data = list(bigger_PIL_img.getdata())
-                if sum(image_data)/len(image_data) < 2:
+                if sum(image_data) / len(image_data) < 2:
                     continue
 
                 if chinese_char in IMPORTANT_CHARS:

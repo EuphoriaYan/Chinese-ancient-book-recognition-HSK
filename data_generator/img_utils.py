@@ -44,7 +44,7 @@ def generate_bigger_image_by_font(chinese_char, font_file, image_size=int(CHAR_I
 def generate_bigger_image_by_shufa(chinese_char, shufa_dir, image_size=int(CHAR_IMG_SIZE * 1.2)):
     height = width = image_size
 
-    pic_path = os.path.join(shufa_dir, chinese_char+'.png')
+    pic_path = os.path.join(shufa_dir, chinese_char + '.png')
     with open(pic_path, 'rb') as pic:
         img = Image.open(pic)
         img = np.array(img)
