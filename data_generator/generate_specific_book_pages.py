@@ -356,7 +356,7 @@ class generate_text_lines_with_text_handle:
         row_end = x + length - 1
         row_height = y2 - y1 + 1
         while length >= row_height:
-            if length < 2 * row_height:
+            if length < 1.5 * row_height:
                 last_char = True
             else:
                 last_char = False
@@ -397,7 +397,7 @@ class generate_text_lines_with_text_handle:
         col_end = y + length - 1
         col_width = x2 - x1 + 1
         while length >= col_width:
-            if length < 2 * col_width:
+            if length < 1.5 * col_width:
                 last_char = True
             else:
                 last_char = False
@@ -440,7 +440,7 @@ class generate_text_lines_with_text_handle:
         chinese_char = ' '
         PIL_char_img = None
         while PIL_char_img is None:
-            if self.special_type == 'num_end':
+            if self.special_type == 'num_end' and last_char:
                 chinese_char = random.choice(['一', '二', '三'])
             else:
                 # 生成白底黑字的字，包含文字
