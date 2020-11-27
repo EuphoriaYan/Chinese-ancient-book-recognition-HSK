@@ -5,7 +5,7 @@ export CUDA_VISIBLE_DEVICES=1
 python data_generator/generate_specific_book_pages.py \
 --obj_num 5 \
 --text_type vertical \
---text_file cover_charset \
+--text_file raw_text/ci_qu_shi.txt \
 --char_size 64 \
 --augment \
 --fonts_json /disks/sdb/projs/AncientBooks/data/chars/font_missing1.json \
