@@ -52,3 +52,9 @@ raw_text/
 
 # output
 output/
+
+# ttf fonts
+charset/*.ttf
+
+# imgs
+test_imgs/

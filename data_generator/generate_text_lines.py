@@ -7,7 +7,7 @@ import json
 import random
 import cv2
 import numpy as np
-import tensorflow as tf
+# import tensorflow as tf
 from PIL import Image, ImageDraw
 
 from config import ONE_TEXT_LINE_IMGS_H, ONE_TEXT_LINE_TAGS_FILE_H
@@ -81,7 +81,7 @@ def generate_one_text_line_imgs(obj_num=100, text_type="horizontal", text_shape=
                 print("Process bar: %.2f%%" % (i * 100 / obj_num))
                 sys.stdout.flush()
 
-
+'''
 def generate_one_text_line_tfrecords(obj_num=100, text_type="horizontal", init_num=0, text_shape=None, edges=False):
     text_type = check_text_type(text_type)
 
@@ -136,7 +136,7 @@ def generate_one_text_line_tfrecords(obj_num=100, text_type="horizontal", init_n
     # 关闭所有的tfrecords写者
     [writer.close() for writer in writers_list]
     return
-
+'''
 
 def generate_two_text_line_imgs(obj_num=100, text_type="horizontal", text_shape=None):
     text_type = check_text_type(text_type)
@@ -169,7 +169,7 @@ def generate_two_text_line_imgs(obj_num=100, text_type="horizontal", text_shape=
                 print("Process bar: %.2f%%" % (i * 100 / obj_num))
                 sys.stdout.flush()
 
-
+'''
 def generate_two_text_line_tfrecords(obj_num=100, text_type="horizontal", init_num=0, text_shape=None, edges=False):
     text_type = check_text_type(text_type)
 
@@ -219,7 +219,7 @@ def generate_two_text_line_tfrecords(obj_num=100, text_type="horizontal", init_n
     # 关闭所有的tfrecords写者
     [writer.close() for writer in writers_list]
     return
-
+'''
 
 def generate_mix_text_line_imgs(obj_num=100, text_type="horizontal", text_shape=None):
     text_type = check_text_type(text_type)
@@ -251,7 +251,7 @@ def generate_mix_text_line_imgs(obj_num=100, text_type="horizontal", text_shape=
                 print("Process bar: %.2f%%" % (i * 100 / obj_num))
                 sys.stdout.flush()
 
-
+'''
 def generate_mix_text_line_tfrecords(obj_num=100, text_type="horizontal", init_num=0, text_shape=None, edges=False):
     text_type = check_text_type(text_type)
 
@@ -300,7 +300,7 @@ def generate_mix_text_line_tfrecords(obj_num=100, text_type="horizontal", init_n
     # 关闭所有的tfrecords写者
     [writer.close() for writer in writers_list]
     return
-
+'''
 
 def draw_edges_around_text(np_img, text_type, line_type="single"):
     img_h, img_w = np_img.shape[:2]
@@ -930,7 +930,7 @@ Char_Image_Generator_img = chinese_char_img_generator_using_shufa()
 
 """ ****************** 检查生成的tfrecords文件是否可用 ******************* """
 
-
+'''
 def display_tfrecords(tfrecords_file):
     data_set = tf.data.TFRecordDataset([tfrecords_file])
 
@@ -966,7 +966,7 @@ def display_tfrecords(tfrecords_file):
         gt_boxes = tf.io.decode_raw(features["gt_boxes"], tf.int32)
         gt_boxes = tf.reshape(gt_boxes, shape=(-1, 4)).numpy()
         print(gt_boxes)
-
+'''
 
 if __name__ == '__main__':
     # generate_one_text_line_imgs(obj_num=100, text_type="horizontal")
