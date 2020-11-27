@@ -58,3 +58,6 @@ charset/*.ttf
 
 # imgs
 test_imgs/
+
+# experiments
+*_experiment/

@@ -282,7 +282,7 @@ class generate_text_lines_with_text_handle:
                 char_list.extend(text)
             else:
                 if self.special_type == 'split':
-                    x -= length
+                    x += length
                 else:
                     x, text1_bbox, text2_bbox, text1, text2, char_bbox1, char_bbox2 = self.generate_two_rows_chars_with_text(
                         x, y1, y2, length, np_background, char_spacing
@@ -511,8 +511,8 @@ class generate_text_lines_with_text_handle:
         try:
             np_background[box_y1:box_y2 + 1, box_x1:box_x2 + 1] = np_char_img
         except ValueError as e:
-            # print('Exception:', e)
-            # print("The size of char_img is larger than the length of (y1, x1) to edge. Now, resize char_img ...")
+            print('Exception:', e)
+            print("The size of char_img is larger than the length of (y1, x1) to edge. Now, resize char_img ...")
             if x2 is None:
                 box_x2 = np_background.shape[1] - 1
                 box_w = box_x2 - box_x1 + 1
