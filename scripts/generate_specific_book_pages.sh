@@ -1,7 +1,7 @@
 export CUDA_VISIBLE_DEVICES=1
 
 python data_generator/generate_specific_book_pages.py \
---obj_num 1000 \
+--obj_num 5000 \
 --text_type vertical \
 --text_file raw_text/ci_qu_shi.txt \
 --char_size 64 \
@@ -12,4 +12,4 @@ python data_generator/generate_specific_book_pages.py \
 --embedding_num 520 \
 --resume 180000 \
 --init_num 0 \
---special_type split \
+--special_type split_num_end \

@@ -281,7 +281,7 @@ class generate_text_lines_with_text_handle:
                 char_bbox_list.extend(char_bbox)
                 char_list.extend(text)
             else:
-                if self.special_type == 'split':
+                if self.special_type == 'split' or self.special_type == 'split_num_end':
                     x += length
                 else:
                     x, text1_bbox, text2_bbox, text1, text2, char_bbox1, char_bbox2 = self.generate_two_rows_chars_with_text(
@@ -326,7 +326,7 @@ class generate_text_lines_with_text_handle:
             else:
                 # 随机决定接下来的字串长度（这是大约数值，实际可能比它小,也可能比它大）
                 length = random.randint(col_width, min(remaining_len, col_width * 10))
-                if self.special_type == 'split':
+                if self.special_type == 'split' or self.special_type == 'split_num_end':
                     y += length
                 else:
                     y, text1_bbox, text2_bbox, text1, text2, char_bbox1, char_bbox2 = self.generate_two_cols_chars_with_text(
@@ -440,7 +440,7 @@ class generate_text_lines_with_text_handle:
         chinese_char = ' '
         PIL_char_img = None
         while PIL_char_img is None:
-            if self.special_type == 'num_end' and last_char:
+            if (self.special_type == 'num_end' or self.special_type == 'split_num_end') and last_char:
                 chinese_char = random.choice(['一', '二', '三'])
             else:
                 # 生成白底黑字的字，包含文字
@@ -619,7 +619,8 @@ def parse_args():
     parser.add_argument('--embedding_num', type=int, required=True)
     parser.add_argument('--resume', type=int, required=True)
     parser.add_argument('--init_num', type=int, default=0)
-    parser.add_argument('--special_type', type=str, default='normal', choices=['normal', 'split', 'num_end'])
+    parser.add_argument('--special_type', type=str, default='normal',
+                        choices=['normal', 'split', 'num_end', 'split_num_end'])
     args = parser.parse_args()
     return args
 
