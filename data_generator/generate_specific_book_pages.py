@@ -49,13 +49,10 @@ def check_text_type(text_type):
 
 
 class generate_text_lines_with_text_handle:
-    def __init__(self, obj_num, shape=None, text_type="horizontal",
-                 text='野火烧不尽春风吹又生', char_size=64, augment=True,
-                 fonts_json='/disks/sdb/projs/AncientBooks/data/chars/font_missing.json',
-                 bad_font_file='charset/songhei_error_font.txt',
-                 experiment_dir='songhei_experiment/',
-                 type_fonts='type/宋黑类字符集.txt',
-                 embedding_num=250, resume=70000,
+    def __init__(self, obj_num, shape=None, text_type="horizontal", text='野火烧不尽春风吹又生', char_size=64,
+                 augment=True, fonts_json='/disks/sdb/projs/AncientBooks/data/chars/font_missing.json',
+                 bad_font_file='charset/songhei_error_font.txt', experiment_dir='songhei_experiment/',
+                 type_fonts='type/宋黑类字符集.txt', embedding_num=250, resume=70000, charset='charset/charset_xl.txt',
                  init_num=0, special_type='normal'):
         self.text = Queue()
         for char in text:
@@ -80,6 +77,7 @@ class generate_text_lines_with_text_handle:
         )
         self.init_num = init_num
         self.special_type = special_type
+        self.charset = set([s.strip() for s in open(charset, 'r', encoding='utf-8')])
 
     def generate_book_page_with_text(self):
         text_type = check_text_type(self.text_type)
@@ -446,6 +444,8 @@ class generate_text_lines_with_text_handle:
                 # 生成白底黑字的字，包含文字
                 if not self.text.empty():
                     chinese_char = self.text.get()
+                    while chinese_char not in self.charset:
+                        chinese_char = self.text.get()
                 else:
                     chinese_char = ' '
             PIL_char_img, flag = self.generate_font_handle.get_mix_character(chinese_char)
@@ -643,7 +643,7 @@ if __name__ == '__main__':
     else:
         with open(args.text_file, 'r', encoding='utf-8') as fp:
             text = [line.strip() for line in fp]
-            text = [re.sub('[，。“”‘’？！《》、（）:：；;·［］【】〈〉]', '', line) for line in text]
+            text = [re.sub('[，。“”‘’？！《》、（）〔〕:：；;·［］【】〈〉<>︻︼︵︶︹︺△　]', '', line) for line in text]
             text = list(filter(None, text))
         text = ''.join(text)
 
