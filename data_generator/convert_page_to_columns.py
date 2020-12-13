@@ -50,17 +50,20 @@ def convert_page_to_char(input_dir, train_output_dir, val_output_dir, train_rati
         bbox_list = img_json['text_bbox_list']
         text_list = img_json['text_list']
         char_bbox_list = img_json['char_bbox_list']
+        char_list = img_json['char_list']
         char_idx = 0
         base_name, ext = os.path.splitext(img_name)
         assert len(bbox_list) == len(text_list)
         for i, (bbox, text) in enumerate(zip(bbox_list, text_list)):
             crop_img = img.crop(bbox)
-            char_list = []
+            new_char_bbox_list = []
             bbox_l, bbox_u, bbox_r, bbox_d = bbox
             bbox_width = bbox_r - bbox_l
             bbox_height = bbox_d - bbox_u
-            for _ in text:
+            for txt_char in text:
                 char_bbox = char_bbox_list[char_idx]
+                char_list_char = char_list[char_idx]
+                assert txt_char == char_list_char, f'txt_char :{txt_char}, char_list_char: {char_list_char}'
                 char_idx += 1
                 char_l, char_u, char_r, char_d = char_bbox
                 char_l -= bbox_l
@@ -71,22 +74,22 @@ def convert_page_to_char(input_dir, train_output_dir, val_output_dir, train_rati
                 char_r = min(bbox_width, char_r)
                 char_u = max(0, char_u)
                 char_d = min(bbox_height, char_d)
-                new_char_bbox = [char_l, char_r, char_u, char_d]
+                new_char_bbox = [char_l, char_u, char_r, char_d]
                 new_char_bbox = list(map(str, new_char_bbox))
                 # char_1w = int(char_height / bbox_height * 10000)
-                char_list.append(','.join(new_char_bbox))
+                new_char_bbox_list.append(','.join(new_char_bbox))
 
             save_path = os.path.join('imgs', base_name + '_' + str(i) + ext)
             gt_path = os.path.join('gts', base_name+ '_' + str(i) + '.txt')
             if random() < train_ratio:
                 crop_img.save(os.path.join(train_output_dir, save_path))
                 with open(os.path.join(train_output_dir, gt_path), 'w', encoding='utf-8') as fp:
-                    for char in char_list:
+                    for char in new_char_bbox_list:
                         fp.write(char + '\n')
             else:
                 crop_img.save(os.path.join(val_output_dir, save_path))
                 with open(os.path.join(val_output_dir, gt_path), 'w', encoding='utf-8') as fp:
-                    for char in char_list:
+                    for char in new_char_bbox_list:
                         fp.write(char + '\n')
 
 
