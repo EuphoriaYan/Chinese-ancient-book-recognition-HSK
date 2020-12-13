@@ -57,8 +57,9 @@ def convert_page_to_char(input_dir, train_output_dir, val_output_dir, train_rati
             for i, (bbox, text) in enumerate(zip(bbox_list, text_list)):
                 crop_img = img.crop(bbox)
                 char_list = []
-                bbox_l = bbox[0]
-                bbox_u = bbox[1]
+                bbox_l, bbox_u, bbox_r, bbox_d = bbox
+                bbox_width = bbox_r - bbox_l
+                bbox_height = bbox_d - bbox_u
                 for _ in text:
                     char_bbox = char_bbox_list[char_idx]
                     char_idx += 1
@@ -67,6 +68,10 @@ def convert_page_to_char(input_dir, train_output_dir, val_output_dir, train_rati
                     char_r -= bbox_l
                     char_u -= bbox_u
                     char_d -= bbox_u
+                    char_l = max(0, char_l)
+                    char_r = min(bbox_width, char_r)
+                    char_u = max(0, char_u)
+                    char_d = min(bbox_height, char_d)
                     new_char_bbox = [char_l, char_r, char_u, char_d]
                     new_char_bbox = list(map(str, new_char_bbox))
                     # char_1w = int(char_height / bbox_height * 10000)
