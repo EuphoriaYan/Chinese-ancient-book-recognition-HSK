@@ -43,8 +43,9 @@ def convert_page_to_char(input_dir, train_output_dir, val_output_dir, train_rati
             pic_gt.append((img_name, json.loads(gt_json)))
     os.makedirs(os.path.join(train_output_dir, 'imgs'), exist_ok=True)
     os.makedirs(os.path.join(train_output_dir, 'gts'), exist_ok=True)
-    os.makedirs(os.path.join(val_output_dir, 'imgs'), exist_ok=True)
-    os.makedirs(os.path.join(val_output_dir, 'gts'), exist_ok=True)
+    if val_output_dir is not None:
+        os.makedirs(os.path.join(val_output_dir, 'imgs'), exist_ok=True)
+        os.makedirs(os.path.join(val_output_dir, 'gts'), exist_ok=True)
     for img_name, img_json in tqdm(pic_gt):
         img = Image.open(os.path.join(input_dir, 'imgs_vertical', img_name))
         bbox_list = img_json['text_bbox_list']
@@ -81,7 +82,7 @@ def convert_page_to_char(input_dir, train_output_dir, val_output_dir, train_rati
 
             save_path = os.path.join('imgs', base_name + '_' + str(i) + ext)
             gt_path = os.path.join('gts', base_name+ '_' + str(i) + '.txt')
-            if random() < train_ratio:
+            if val_output_dir is None or random() < train_ratio:
                 crop_img.save(os.path.join(train_output_dir, save_path))
                 with open(os.path.join(train_output_dir, gt_path), 'w', encoding='utf-8') as fp:
                     for char in new_char_bbox_list:
@@ -97,7 +98,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--input_dir', type=str, required=True)
     parser.add_argument('--train_output_dir', type=str, required=True)
-    parser.add_argument('--val_output_dir', type=str, required=True)
+    parser.add_argument('--val_output_dir', type=str, default=None)
     parser.add_argument('--train_ratio', type=float, default=0.995)
     args = parser.parse_args()
     # convert_page_to_columns(args.input_dir, args.train_output_dir, args.val_output_dir, args.train_ratio)
