@@ -53,7 +53,7 @@ class generate_text_lines_with_text_handle:
                  augment=True, fonts_json='/disks/sdb/projs/AncientBooks/data/chars/font_missing.json',
                  bad_font_file='charset/songhei_error_font.txt', experiment_dir='songhei_experiment/',
                  type_fonts='type/宋黑类字符集.txt', embedding_num=250, resume=70000, charset='charset/charset_xl.txt',
-                 init_num=0, special_type='normal', segment_type='normal'):
+                 init_num=0, special_type='normal'):
         self.text = Queue()
         for char in text:
             self.text.put(char)
@@ -77,7 +77,6 @@ class generate_text_lines_with_text_handle:
         )
         self.init_num = init_num
         self.special_type = special_type
-        self.segment_type = segment_type
         self.charset = set([s.strip() for s in open(charset, 'r', encoding='utf-8')])
 
     def generate_book_page_with_text(self):
@@ -232,12 +231,7 @@ class generate_text_lines_with_text_handle:
                 np_page = np.array(PIL_page, dtype=np.uint8)
 
             # 随机决定字符间距占列距的比例
-            if self.segment_type == 'normal':
-                char_spacing = (random.uniform(0.0, 0.2), random.uniform(0.02, 0.15))  # (高方向, 宽方向)
-            elif self.segment_type == 'crowded':
-                char_spacing = (random.uniform(-0.1, 0.1), random.uniform(0.02, 0.15))  # (高方向, 宽方向)
-            elif self.segment_type == 'spacious':
-                char_spacing = (random.uniform(0.5, 1), random.uniform(0.02, 0.15))  # (高方向, 宽方向)
+            char_spacing = (random.uniform(0.0, 0.2), random.uniform(0.02, 0.15))  # (高方向, 宽方向)
 
             # 逐列生成汉字，最右边为第一列
             for i in range(len(xs) - 1, 0, -1):
@@ -516,7 +510,7 @@ class generate_text_lines_with_text_handle:
 
         # 将生成的汉字图片放入背景图片
         try:
-            np_background[box_y1:box_y2 + 1, box_x1:box_x2 + 1] &= np_char_img
+            np_background[box_y1:box_y2 + 1, box_x1:box_x2 + 1] = np_char_img
         except ValueError as e:
             print('Exception:', e)
             print("The size of char_img is larger than the length of (y1, x1) to edge. Now, resize char_img ...")
@@ -627,8 +621,6 @@ def parse_args():
     parser.add_argument('--init_num', type=int, default=0)
     parser.add_argument('--special_type', type=str, default='normal',
                         choices=['normal', 'split', 'num_end', 'split_num_end'])
-    parser.add_argument('--segment_type', type=str, default='normal',
-                        choices=['normal', 'crowded', 'spacious'])
     args = parser.parse_args()
     return args
 
@@ -639,26 +631,18 @@ if __name__ == '__main__':
     #    text = [re.sub('[，。“”‘’？！《》、（）:：；;·［］【】〈〉]', '', line) for line in text]
     #    text = list(filter(None, text))
     args = parse_args()
-    if args.text_file == 'cover_charset':
-        text = []
-        with open('./charset/charset_xl.txt', 'r', encoding='utf-8') as fp:
-            raw_charset = [line.strip() for line in fp]
-        for _ in range(50):
-            charset = copy.deepcopy(raw_charset)
-            random.shuffle(charset)
-            text.extend(charset)
-        text = ''.join(text)
-    else:
-        with open(args.text_file, 'r', encoding='utf-8') as fp:
-            text = [line.strip() for line in fp]
-            text = [re.sub('[，。“”‘’？！《》、（）〔〕:：；;·［］【】〈〉<>︻︼︵︶︹︺△　]', '', line) for line in text]
-            text = list(filter(None, text))
-        text = ''.join(text)
+    if not os.path.isfile(args.text_file):
+        raise ValueError('TEXT_FILE error.')
+    with open(args.text_file, 'r', encoding='utf-8') as fp:
+        text = [line.strip() for line in fp]
+        text = [re.sub('[，。“”‘’？！《》、（）〔〕:：；;·［］【】〈〉<>︻︼︵︶︹︺△　]', '', line) for line in text]
+        text = list(filter(None, text))
+    text = ''.join(text)
 
     handle = generate_text_lines_with_text_handle(
         obj_num=args.obj_num, text_type=args.text_type, text=text, char_size=args.char_size, augment=args.augment,
         fonts_json=args.fonts_json, bad_font_file=args.bad_font_file, experiment_dir=args.experiment_dir,
         type_fonts=args.type_fonts, embedding_num=args.embedding_num, resume=args.resume, init_num=args.init_num,
-        special_type=args.special_type, segment_type=args.segment_type
+        special_type=args.special_type
     )
     handle.generate_book_page_with_text()
