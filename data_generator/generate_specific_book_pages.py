@@ -516,6 +516,7 @@ class generate_text_lines_with_text_handle:
 
         # 将生成的汉字图片放入背景图片
         try:
+            # TODO here
             np_background[box_y1:box_y2 + 1, box_x1:box_x2 + 1] &= np_char_img
         except ValueError as e:
             print('Exception:', e)
