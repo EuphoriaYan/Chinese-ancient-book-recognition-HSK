@@ -516,8 +516,8 @@ class generate_text_lines_with_text_handle:
 
         # 将生成的汉字图片放入背景图片
         try:
-            # TODO here
-            np_background[box_y1:box_y2 + 1, box_x1:box_x2 + 1] &= np_char_img
+            # use 'or' function to make crowded imgs.
+            np_background[box_y1:box_y2 + 1, box_x1:box_x2 + 1] |= np_char_img
         except ValueError as e:
             print('Exception:', e)
             print("The size of char_img is larger than the length of (y1, x1) to edge. Now, resize char_img ...")
@@ -535,9 +535,15 @@ class generate_text_lines_with_text_handle:
 
         # 随机选定汉字图片的bounding-box
         bbox_x1 = random.randint(x1, box_x1)
-        bbox_y1 = random.randint(y1, box_y1)
+        if box_y1 > y1:
+            bbox_y1 = random.randint(y1, box_y1)
+        else:
+            bbox_y1 = random.randint(box_y1, y1)
         bbox_x2 = min(random.randint(box_x2, box_x2 + char_spacing_w), np_background.shape[1] - 1)
-        bbox_y2 = min(random.randint(box_y2, box_y2 + char_spacing_h), np_background.shape[0] - 1)
+        if char_spacing_h >= 0:
+            bbox_y2 = min(random.randint(box_y2, box_y2 + char_spacing_h), np_background.shape[0] - 1)
+        else:
+            bbox_y2 = min(random.randint(box_y2 + char_spacing_h, box_y2), np_background.shape[0] - 1)
         bounding_box = (bbox_x1, bbox_y1, bbox_x2, bbox_y2)
 
         char_box_tail = box_x2 + 1 if x2 is None else box_y2 + 1
