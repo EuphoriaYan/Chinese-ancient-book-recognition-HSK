@@ -50,7 +50,7 @@ def check_text_type(text_type):
 
 class generate_text_lines_with_text_handle:
     def __init__(self, obj_num, shape=None, text_type="horizontal", text='野火烧不尽春风吹又生', char_size=64,
-                 augment=True, fonts_json='/disks/sdb/projs/AncientBooks/data/chars/font_missing.json',
+                 augment=True, fonts_json='/disks/sdb/projs/AncientBooks/data/chars/font_missing.json', fonts_root=None,
                  bad_font_file='charset/songhei_error_font.txt', experiment_dir='songhei_experiment/',
                  type_fonts='type/宋黑类字符集.txt', embedding_num=250, resume=70000, charset='charset/charset_xl.txt',
                  init_num=0, special_type='normal', segment_type='normal'):
@@ -69,6 +69,7 @@ class generate_text_lines_with_text_handle:
         self.augment = augment
         self.generate_font_handle = create_mix_ch_handle(
             fonts_json=fonts_json,
+            fonts_root=fonts_root,
             bad_font_file=bad_font_file,
             experiment_dir=experiment_dir,
             type_fonts=type_fonts,
@@ -626,6 +627,7 @@ def parse_args():
     parser.add_argument('--char_size', type=int, default=64)
     parser.add_argument('--augment', action='store_true')
     parser.add_argument('--fonts_json', type=str, required=True)
+    parser.add_argument('--fonts_root', type=str, default=None)
     parser.add_argument('--bad_font_file', type=str, default=None)
     parser.add_argument('--experiment_dir', type=str, required=True)
     parser.add_argument('--type_fonts', type=str, required=True)
@@ -664,7 +666,8 @@ if __name__ == '__main__':
 
     handle = generate_text_lines_with_text_handle(
         obj_num=args.obj_num, text_type=args.text_type, text=text, char_size=args.char_size, augment=args.augment,
-        fonts_json=args.fonts_json, bad_font_file=args.bad_font_file, experiment_dir=args.experiment_dir,
+        fonts_json=args.fonts_json, fonts_root=args.fonts_root,
+        bad_font_file=args.bad_font_file, experiment_dir=args.experiment_dir,
         type_fonts=args.type_fonts, embedding_num=args.embedding_num, resume=args.resume, init_num=args.init_num,
         special_type=args.special_type, segment_type=args.segment_type
     )

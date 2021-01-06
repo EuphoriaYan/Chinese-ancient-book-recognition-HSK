@@ -114,7 +114,7 @@ class create_mix_ch_handle:
 
     def __init__(self, bad_font_file, experiment_dir,
                  src_fonts_dir='charset/ZhongHuaSong',
-                 fonts_json='/disks/sdb/projs/AncientBooks/data/chars/font_missing.json',
+                 fonts_json='/disks/sdb/projs/AncientBooks/data/chars/font_missing.json', fonts_root=None,
                  type_fonts='type/宋黑类字符集.txt',
                  input_nc=1, embedding_num=250, embedding_dim=128,  # model settings
                  Lconst_penalty=15, Lcategory_penalty=1.0, gpu_ids=['cuda'], resume=240000,  # model settings
@@ -139,6 +139,7 @@ class create_mix_ch_handle:
             os.path.join(src_fonts_dir, 'FZSONG_ZhongHuaSongPlane02_2020051520200519101142.TTF'), char_size)
 
         self.fonts = self.get_fonts(fonts_json)
+        self.fonts_root = fonts_root
         self.fonts2idx = {os.path.splitext(font['font_name'])[0]: idx for idx, font in enumerate(self.fonts)}
 
         with open(type_fonts, 'r', encoding='utf-8') as fp:
@@ -183,7 +184,12 @@ class create_mix_ch_handle:
         self.font_name = cur_font['font_name']
         print(self.font_name + ': ' + str(self.idx) + ' , raw_idx: ' + str(raw_idx), flush=True)
 
-        font_path = cur_font['font_pth']
+        if self.fonts_root is None:
+            font_path = cur_font['font_pth']
+        else:
+            raw_font_path = cur_font['font_pth']
+            font_basename = os.path.basename(raw_font_path)
+            font_path = os.path.join(self.fonts_root, font_basename)
         self.font_missing = set(cur_font['missing'])
         self.font_fake = set(cur_font['fake'])
         self.dst_font = ImageFont.truetype(font_path, self.char_size)
