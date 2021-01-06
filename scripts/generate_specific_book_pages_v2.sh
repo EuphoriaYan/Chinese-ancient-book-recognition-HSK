@@ -14,4 +14,4 @@ python data_generator/generate_specific_book_pages.py \
 --resume 180000 \
 --init_num 0 \
 --special_type normal \
---special_segment mixed \  # normal/spacious/crowded
+--segment_type mixed \  # normal/spacious/crowded/mixed
