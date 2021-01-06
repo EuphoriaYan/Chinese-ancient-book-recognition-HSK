@@ -239,6 +239,11 @@ class generate_text_lines_with_text_handle:
                 char_spacing = (random.uniform(-0.1, 0.1), random.uniform(0.02, 0.15))  # (高方向, 宽方向)
             elif self.segment_type == 'spacious':
                 char_spacing = (random.uniform(0.5, 1), random.uniform(0.02, 0.15))  # (高方向, 宽方向)
+            elif self.segment_type == 'mixed':
+                if random.random() > 0.5:
+                    char_spacing = (random.uniform(-0.1, 0.1), random.uniform(0.02, 0.15))  # (高方向, 宽方向)
+                else:
+                    char_spacing = (random.uniform(0.5, 1), random.uniform(0.02, 0.15))  # (高方向, 宽方向)
 
             # 逐列生成汉字，最右边为第一列
             for i in range(len(xs) - 1, 0, -1):
@@ -637,7 +642,7 @@ def parse_args():
     parser.add_argument('--special_type', type=str, default='normal',
                         choices=['normal', 'split', 'num_end', 'split_num_end'])
     parser.add_argument('--segment_type', type=str, default='normal',
-                        choices=['normal', 'crowded', 'spacious'])
+                        choices=['normal', 'crowded', 'spacious', 'mixed'])
     args = parser.parse_args()
     return args
 
