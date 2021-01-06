@@ -240,10 +240,13 @@ class generate_text_lines_with_text_handle:
             elif self.segment_type == 'spacious':
                 char_spacing = (random.uniform(0.5, 1), random.uniform(0.02, 0.15))  # (高方向, 宽方向)
             elif self.segment_type == 'mixed':
-                if random.random() > 0.5:
+                rand_num = random.random()
+                if rand_num > 0.5:  # 50% crowded
                     char_spacing = (random.uniform(-0.1, 0.1), random.uniform(0.02, 0.15))  # (高方向, 宽方向)
-                else:
+                elif rand_num < 0.2:  # 20% spacious
                     char_spacing = (random.uniform(0.5, 1), random.uniform(0.02, 0.15))  # (高方向, 宽方向)
+                else:  # 30% normal
+                    char_spacing = (random.uniform(0.0, 0.2), random.uniform(0.02, 0.15))  # (高方向, 宽方向)
 
             # 逐列生成汉字，最右边为第一列
             for i in range(len(xs) - 1, 0, -1):
