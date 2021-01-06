@@ -657,7 +657,6 @@ if __name__ == '__main__':
     #    text = list(filter(None, text))
     args = parse_args()
     pprint(vars(args))
-    print(args)
     if args.text_file == 'cover_charset':
         text = []
         with open('./charset/charset_xl.txt', 'r', encoding='utf-8') as fp:
