@@ -409,7 +409,8 @@ class generate_text_lines_with_text_handle:
 
         col_end = y + length - 1
         col_width = x2 - x1 + 1
-        while length >= col_width:
+        # 就算字超过字框了，也不能让它超到页面外面去
+        while length >= col_width and y + char_spacing + col_width <= np_background.shape[0]:
             if length < 1.5 * col_width:
                 last_char = True
             else:
@@ -537,7 +538,7 @@ class generate_text_lines_with_text_handle:
                 box_y2 = np_background.shape[0] - 1
                 box_h = box_y2 - box_y1 + 1
             np_char_img = resize_img_by_opencv(np_char_img, obj_size=(box_w, box_h))
-            np_background[box_y1:box_y2 + 1, box_x1:box_x2 + 1] = np_char_img
+            np_background[box_y1:box_y2 + 1, box_x1:box_x2 + 1] |= np_char_img
 
         # 包围汉字的最小box作为bounding-box
         # bounding_box = (box_x1, box_y1, box_x2, box_y2)
