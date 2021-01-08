@@ -238,13 +238,13 @@ class generate_text_lines_with_text_handle:
             elif self.segment_type == 'crowded':
                 char_spacing = (random.uniform(-0.1, 0.1), random.uniform(0.02, 0.15))  # (高方向, 宽方向)
             elif self.segment_type == 'spacious':
-                char_spacing = (random.uniform(0.5, 1), random.uniform(0.02, 0.15))  # (高方向, 宽方向)
+                char_spacing = (random.uniform(0.3, 0.6), random.uniform(0.02, 0.15))  # (高方向, 宽方向)
             elif self.segment_type == 'mixed':
                 rand_num = random.random()
                 if rand_num > 0.5:  # 50% crowded
                     char_spacing = (random.uniform(-0.1, 0.1), random.uniform(0.02, 0.15))  # (高方向, 宽方向)
                 elif rand_num < 0.2:  # 20% spacious
-                    char_spacing = (random.uniform(0.5, 1), random.uniform(0.02, 0.15))  # (高方向, 宽方向)
+                    char_spacing = (random.uniform(0.3, 0.6), random.uniform(0.02, 0.15))  # (高方向, 宽方向)
                 else:  # 30% normal
                     char_spacing = (random.uniform(0.0, 0.2), random.uniform(0.02, 0.15))  # (高方向, 宽方向)
 
@@ -409,8 +409,12 @@ class generate_text_lines_with_text_handle:
 
         col_end = y + length - 1
         col_width = x2 - x1 + 1
-        # 就算字超过字框了，也不能让它超到页面外面去
-        while length >= col_width and y + char_spacing + col_width <= np_background.shape[0]:
+        first_char = True
+        while length >= col_width:
+            # 就算字超过字框了，也不能让它超到页面外面去
+            if not first_char:
+                if y + (char_spacing[0] + 1) * col_width >= np_background.shape[0]:
+                    break
             if length < 1.5 * col_width:
                 last_char = True
             else:
@@ -422,6 +426,7 @@ class generate_text_lines_with_text_handle:
             added_length = y_tail - y
             length -= added_length
             y = y_tail
+            first_char = False
 
         # 获取文本行的bounding-box
         head_x1, head_y1, _, _ = char_and_box_list[0][1]
