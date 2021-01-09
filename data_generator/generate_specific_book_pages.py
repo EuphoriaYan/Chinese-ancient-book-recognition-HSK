@@ -420,8 +420,10 @@ class generate_text_lines_with_text_handle:
             else:
                 last_char = False
             chinese_char, bounding_box, y_tail = self.generate_char_img_into_unclosed_box_with_text(
-                np_background, x1=x1, y1=y, x2=x2, y2=None, char_spacing=char_spacing, last_char=last_char
+                np_background, x1=x1, y1=y, x2=x2, y2=None, char_spacing=char_spacing, first_char=first_char, last_char=last_char
             )
+            if chinese_char is None:
+                break
             char_and_box_list.append((chinese_char, bounding_box))
             added_length = y_tail - y
             length -= added_length
@@ -449,7 +451,7 @@ class generate_text_lines_with_text_handle:
         return max(y_1, y_2), text1_bbox, text2_bbox, text1, text2, char_bbox1, char_bbox2
 
     def generate_char_img_into_unclosed_box_with_text(self, np_background, x1, y1, x2=None, y2=None,
-                                                      char_spacing=(0.05, 0.05), last_char=False):
+                                                      char_spacing=(0.05, 0.05), first_char=False, last_char=False):
 
         if x2 is None and y2 is None:
             raise ValueError("There is one and only one None in (x2, y2).")
@@ -495,7 +497,10 @@ class generate_text_lines_with_text_handle:
             row_h = y2 - y1 + 1
             char_spacing_h = round(row_h * char_spacing[0])
             char_spacing_w = round(row_h * char_spacing[1])
-            box_x1 = x1 + char_spacing_w
+            if first_char:
+                box_x1 = x1
+            else:
+                box_x1 = x1 + char_spacing_w
             box_y1 = y1 + char_spacing_h
             box_y2 = y2 - char_spacing_h
             box_h = box_y2 - box_y1 + 1
@@ -516,7 +521,10 @@ class generate_text_lines_with_text_handle:
             char_spacing_w = round(col_w * char_spacing[1])
             box_x1 = x1 + char_spacing_w
             box_x2 = x2 - char_spacing_w
-            box_y1 = y1 + char_spacing_h
+            if first_char:
+                box_y1 = y1
+            else:
+                box_y1 = y1 + char_spacing_h
             box_w = box_x2 - box_x1 + 1
 
             if char_img_width * 1.4 < char_img_height:
@@ -543,7 +551,12 @@ class generate_text_lines_with_text_handle:
                 box_y2 = np_background.shape[0] - 1
                 box_h = box_y2 - box_y1 + 1
             np_char_img = resize_img_by_opencv(np_char_img, obj_size=(box_w, box_h))
-            np_background[box_y1:box_y2 + 1, box_x1:box_x2 + 1] |= np_char_img
+            try:
+                np_background[box_y1:box_y2 + 1, box_x1:box_x2 + 1] |= np_char_img
+            except ValueError as e:
+                print('Exception:', e)
+                print('Can\'t resize, ignore this char')
+                return None, None, None
 
         # 包围汉字的最小box作为bounding-box
         # bounding_box = (box_x1, box_y1, box_x2, box_y2)
