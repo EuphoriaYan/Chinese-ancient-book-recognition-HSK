@@ -94,7 +94,7 @@ class generate_text_lines_with_text_handle:
         check_or_makedirs(book_page_imgs_dir)
 
         with open(book_page_tags_file, "w", encoding="utf-8") as fw:
-            for i in range(self.init_num, self.init_num + self.obj_num):
+            for i in range(self.init_num, self.obj_num):
                 if isinstance(self.shape, list):
                     shape = random.choice(self.shape)
                 else:
